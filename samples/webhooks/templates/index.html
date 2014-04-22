@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+{% autoescape true %}
+<html>
+  <head>
+    <title>Quip Webhooks</title>
+     <link type="text/css" rel="stylesheet" href="/static/main.css" />
+  </head>
+  <body>
+    <h1>Quip Webhooks</h1>
+
+    <div class="step">
+      <h2>Step 1</h2>
+
+      <div class="prompt">
+        Enter your <a href="https://quip.com/api/personal-token">Quip API Access Token</a>
+      </div>
+      <div class="input">
+        <input type="text" size="80" id="api-token">
+      </div>
+      <div class="explanation">
+        The access token determines what user the messages will be posted as.
+      </div>
+    </div>
+
+    <div class="step">
+      <h2>Step 2</h2>
+
+      <div class="prompt">
+        Choose a thread to post to
+      </div>
+      <div class="input">
+        <input type="text" size="12" id="thread-id">
+      </div>
+      <div class="explanation">
+        Threads are identified by their 11-character ID in the URL:
+        <code>quip.com/<i>ABCDEFghijk</i></code>.
+      </div>
+    </div>
+
+    <div class="step">
+      <h2>Step 3</h2>
+
+      <div class="prompt">
+        Choose a service
+      </div>
+      <ul class="services">
+        <li>
+          <button class="github">GitHub</button>
+          <div class="explanation">
+            Notifications of commits
+          </div>
+        </li>
+        <li>
+          <button class="crashlytics">Crashlytics</button>
+          <div class="explanation">
+            Notifications of issues
+          </div>
+        </li>
+        <li>
+          <button class="pagerduty">PagerDuty</button>
+          <div class="explanation">
+            Notifications of new incidents
+          </div>
+        </li>
+      </ul>
+    </div>
+
+    <div class="step">
+      <h2>Step 4</h2>
+
+      <div class="prompt">
+        Get your URL
+      </div>
+      <div class="input">
+        <input type="text" size="80" id="hook-url">
+      </div>
+
+    </div>
+
+    <div class="step">
+      <h2>Step 5</h2>
+
+      <div class="prompt">
+        Add the web hook to the service
+
+        <div class="service-instructions github">
+          <ol>
+            <li>Go to your repository's settings page.</li>
+            <li>Choose the "Webhooks &amp; Services" item from the sidebar.</li>
+            <li>Press the "Add webhook" button.</li>
+            <li>Paste in the URL in the "Payload URL" field.</li>
+            <li>From the "Payload version" drop-down, choose <code>application/vnd.github.v3+sjon</code>.</li>
+            <li>Leave the events radio buttons to the <code>push</code> option.</li>
+            <li>Press the "Add webhook" button.</li>
+          </ol>
+
+          <p>If everything works as expected, you'll get a "GitHub Web Hook initialized." message in the thread that you selected.<p>
+        </div>
+
+        <div class="service-instructions crashlytics">
+          <ol>
+            <li>Go to your app's page.</li>
+            <li>From the gear menu in the left bar, choose "App".</li>
+            <li>Choose the integrations tab.</li>
+            <li>Scroll down to "Web Hook" and select it.</li>
+            <li>Press the "Activate" button on the right hand side.</li>
+            <li>Paste in the URL in the single form field.</li>
+            <li>Press the "Verify" button.</li>
+          </ol>
+
+          <p>If everything works as expected, you'll get a "Crashlytics Web Hook initialized." message in the thread that you selected.<p>
+        </div>
+        <div class="service-instructions pagerduty">
+          <ol>
+            <li>Go to your services page.</li>
+            <li>Select the service.</li>
+            <li>Under "Webhooks", click "Add a webhook".</li>
+            <li>Enter a name, and paste the URL in the "Endpoint URL" box.</li>
+            <li>Click "Save" to enable the webhook.</li>
+          </ol>
+        </div>
+      </div>
+    </div>
+
+    <footer>
+      <a href="https://quip.com/">Quip</a>
+      -
+      <a href="https://quip.com/api">Quip API</a>
+      -
+      <a href="https://github.com/quip/quip-api/tree/master/samples/webhooks">Source</a>
+    </footer>
+
+    <script src="/static/main.js"></script>
+  </body>
+</html>
+{% endautoescape %}
