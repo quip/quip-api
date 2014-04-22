@@ -18,7 +18,7 @@ For full API documentation, visit https://quip.com/api/.
 
 Typical usage:
 
-    client = QuipClient(access_token=...)
+    client = quip.QuipClient(access_token=...)
     user = client.get_authenticated_user()
     desktop = client.get_folder(user["desktop_folder_id"])
     print "There are", len(desktop["children"]), "items on the desktop"

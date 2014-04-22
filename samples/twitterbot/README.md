@@ -1,4 +1,4 @@
-# Twitter Bot
+# Quip Twitter Bot
 
 Simple Python process to listen for Twitter updates and post them
 to a Quip thread.
