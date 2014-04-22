@@ -41,9 +41,12 @@ def main():
 
     parser.add_argument("--access_token", required=True,
         help="Access token for the user whose account should be backed up")
+    parser.add_argument("--root_folder_id", default=None,
+        help="If provided, only the documents in the given folder will be "
+             "backed up. Otherwise all folder and documents will be backed up.")
     parser.add_argument("--quip_api_base_url", default=None,
         help="Alternative base URL for the Quip API. If none is provided, "
-            "https://platform.quip.com will be used")
+             "https://platform.quip.com will be used")
     parser.add_argument("--output_directory", default="./",
         help="Directory where to place backup data.")
 
@@ -57,15 +60,19 @@ def main():
         output_directory, _OUTPUT_STATIC_DIRECTORY_NAME)
     shutil.copytree(_STATIC_DIRECTORY, output_static_diretory)
     _ensure_path_exists(output_directory)
-    _run_backup(client, output_directory)
+    _run_backup(client, output_directory, args.root_folder_id)
 
-def _run_backup(client, output_directory):
+def _run_backup(client, output_directory, root_folder_id):
     user = client.get_authenticated_user()
     processed_folder_ids = set()
-    _descend_into_folder(user["archive_folder_id"], processed_folder_ids,
-        client, output_directory, 0)
-    _descend_into_folder(user["desktop_folder_id"], processed_folder_ids,
-        client, output_directory, 0)
+    if root_folder_id:
+        _descend_into_folder(root_folder_id, processed_folder_ids,
+            client, output_directory, 0)
+    else:
+        _descend_into_folder(user["archive_folder_id"], processed_folder_ids,
+            client, output_directory, 0)
+        _descend_into_folder(user["desktop_folder_id"], processed_folder_ids,
+            client, output_directory, 0)
 
 def _descend_into_folder(folder_id, processed_folder_ids, client,
         output_directory, depth):
