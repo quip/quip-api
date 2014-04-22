@@ -210,18 +210,18 @@ class QuipClient(object):
             "member_ids": ",".join(member_ids),
         })
 
-    def edit_document(self, thread_id, content, location=APPEND, format="html",
+    def edit_document(self, thread_id, content, operation=APPEND, format="html",
                       section_id=None):
         """Edits the given document, adding the given content.
 
-        `location` should be one of the constants described above. If
-        `location` is relative to another section of the document, you must
+        `operation` should be one of the constants described above. If
+        `operation` is relative to another section of the document, you must
         also specify the `section_id`.
         """
         return self._fetch_json("threads/edit-document", post_data={
             "thread_id": thread_id,
             "content": content,
-            "location": location,
+            "location": operation,
             "format": format,
             "section_id": section_id,
         })
@@ -240,7 +240,7 @@ class QuipClient(object):
             content="\n\n".join(items),
             format="markdown",
             section_id=section_id,
-            location=self.AFTER_SECTION)
+            operation=self.AFTER_SECTION)
 
     def get_first_list(self, thread_id=None, document_html=None):
         """Returns the `ElementTree` of the first list in the document.
