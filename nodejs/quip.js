@@ -72,6 +72,42 @@ function Client(options) {
 }
 
 /**
+ * Returns the URL the user should be redirected to to sign in.
+ *
+ * @param {string} redirectUri
+ * @param {string=} state
+ */
+Client.prototype.getAuthorizationUrl = function(redirectUri, state) {
+    return 'https://platform.quip.com/1/oauth/login?' + querystring.stringify({
+        'redirect_uri': redirectUri,
+        'state': state,
+        'response_type': 'code',
+        'client_id': this.clientId
+    });
+};
+
+/**
+ * Exchanges a verification code for an access_token.
+ *
+ * Once the user is redirected back to your server from the URL
+ * returned by `getAuthorizationUrl`, you can exchange the `code`
+ * argument for an access token with this method.
+ *
+ * @param {string} redirectUri
+ * @param {string} code
+ * @param {function(Error, Object)} callback
+ */
+Client.prototype.getAccessToken = function(redirectUri, code, callback) {
+    this.call_('oauth/access_token?' + querystring.stringify({
+        'redirect_uri': redirectUri,
+        'code': code,
+        'grant_type': 'authorization_code',
+        'client_id': this.clientId,
+        'client_secret': this.clientSecret
+    }), callback);
+};
+
+/**
  * @param {function(Error, Object)} callback
  */
 Client.prototype.getAuthenticatedUser = function(callback) {
@@ -137,7 +173,7 @@ Client.prototype.newFolder = function(options, callback) {
         'title': options.title,
         'parent_id': options.parentId,
         'color': options.color
-    }
+    };
     if (options.memberIds) {
         args['member_ids'] = options.memberIds.join(',');
     }
@@ -155,7 +191,7 @@ Client.prototype.updateFolder = function(options, callback) {
         'folder_id': options.folderId,
         'title': options.title,
         'color': options.color
-    }
+    };
     this.call_('folders/update', callback, args);
 };
 
@@ -168,7 +204,7 @@ Client.prototype.addFolderMembers = function(options, callback) {
     var args = {
         'folder_id': options.folderId,
         'member_ids': options.memberIds.join(',')
-    }
+    };
     this.call_('folders/add-members', callback, args);
 };
 
@@ -181,7 +217,7 @@ Client.prototype.removeFolderMembers = function(options, callback) {
     var args = {
         'folder_id': options.folderId,
         'member_ids': options.memberIds.join(',')
-    }
+    };
     this.call_('folders/remove-members', callback, args);
 };
 
@@ -209,7 +245,7 @@ Client.prototype.newMessage = function(options, callback) {
         'thread_id': options.threadId,
         'content': options.content,
         'silent': (options.silent ? 1 : undefined)
-    }
+    };
     this.call_('messages/new', callback, args);
 };
 
@@ -256,7 +292,7 @@ Client.prototype.newDocument = function(options, callback) {
         'content': options.content,
         'title': options.title,
         'format': options.format
-    }
+    };
     if (options.memberIds) {
         args['member_ids'] = options.memberIds.join(',');
     }
@@ -277,7 +313,7 @@ Client.prototype.editDocument = function(options, callback) {
         'location': options.operation,
         'format': options.format,
         'section_id': options.sectionId
-    }
+    };
     this.call_('threads/edit-document', callback, args);
 };
 
@@ -290,7 +326,7 @@ Client.prototype.addThreadMembers = function(options, callback) {
     var args = {
         'thread_id': options.threadId,
         'member_ids': options.memberIds.join(',')
-    }
+    };
     this.call_('threads/add-members', callback, args);
 };
 
@@ -303,7 +339,7 @@ Client.prototype.removeThreadMembers = function(options, callback) {
     var args = {
         'thread_id': options.threadId,
         'member_ids': options.memberIds.join(',')
-    }
+    };
     this.call_('threads/remove-members', callback, args);
 };
 
