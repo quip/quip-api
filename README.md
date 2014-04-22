@@ -3,13 +3,13 @@ Quip API
 
 This is the official repository for the [Quip API](https://quip.com/api/).
 
-* [Quip API Reference][(https://quip.com/api/reference)
-* [Get a Personal API Access Token][(https://quip.com/api/personal-token)
+* [Quip API Reference](https://quip.com/api/reference)
+* [Get a Personal API Access Token](https://quip.com/api/personal-token)
 
 ## Client Libraries
 
-* [Python][(python)
-* [node.js][(nodejs)
+* [Python](python)
+* [node.js](nodejs)
 
 ## Sample Apps
 
