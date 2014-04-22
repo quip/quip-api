@@ -134,4 +134,3 @@ _DOCUMENT_TEMPLATE = _read_template("document.html")
 
 if __name__ == '__main__':
     main()
-
