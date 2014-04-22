@@ -1,6 +1,6 @@
-# Webhooks for Quip
+# Mail2Quip
 
-Simple (state-less) server that creates Quip messages from emails.
+Simple (state-less) server that creates Quip messages from emails. Sample server [running here](http://mail2quip.appspot.com/).
 
 ## Caveats
 
