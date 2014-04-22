@@ -12,6 +12,11 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+"""Inbound email handler that creates Quip messages from emails.
+
+This is a sample app for the Quip API - https://quip.com/api/.
+"""
+
 import logging
 import jinja2
 import os

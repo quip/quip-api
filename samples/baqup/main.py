@@ -14,6 +14,11 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+"""Backs up a Quip account to a local folder.
+
+This is a sample app for the Quip API - https://quip.com/api/.
+"""
+
 import argparse
 import logging
 import os.path
@@ -22,12 +27,6 @@ import shutil
 import urllib2
 
 import quip
-
-# TODO
-# - messages in threads
-# - stylesheet for document HTML
-# - images in documents
-# - rewrite mention URLs in documents and messages
 
 _BASE_DIRECTORY = os.path.dirname(os.path.abspath(__file__))
 _STATIC_DIRECTORY = os.path.abspath(os.path.join(_BASE_DIRECTORY, 'static'))

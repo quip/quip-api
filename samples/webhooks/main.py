@@ -12,6 +12,11 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+"""Inbound webhook server that posts service activity to a Quip thread.
+
+This is a sample app for the Quip API - https://quip.com/api/.
+"""
+
 import json
 import logging
 import os

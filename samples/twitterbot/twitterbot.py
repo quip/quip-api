@@ -2,7 +2,10 @@
 #
 # Copyright Quip 2014
 
-"""Updates Quip with new Twitter messages."""
+"""Updates Quip with new Twitter messages.
+
+This is a sample app for the Quip API - https://quip.com/api/.
+"""
 
 import argparse
 import logging
