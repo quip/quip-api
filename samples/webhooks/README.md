@@ -28,7 +28,7 @@ ngrok 8080
 
 And you'll be given an URL like `27841f20.ngrok.com` which you can use with GitHub, Crashlytics, etc. You can also visit [http://localhost:4040/](http://localhost:4040/) to see all tunneled requests (and to replay them).
 
-## Deplying to App Engine
+## Deploying to App Engine
 
 ```
 appcfg.py --oauth2 --no_cookies update ./

@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+{% autoescape true %}
+<html>
+  <head>
+    <title>Mail2Quip - email to Quip gateway</title>
+    <link type="text/css" rel="stylesheet" href="/static/mail2quip.css" />
+  </head>
+  <body>
+    <h1>Mail 2 Quip</h1>
+    <p>
+      Do you have emailed alerts you'd like to appear in Quip? IFTTT
+      or Zapier recipes that should go to Quip? Mail2Quip allows you
+      to create new messages by email.
+    </p>
+    <ol>
+      <li>Get a <a href="https://quip.com/api/personal-token">token</a> for
+        the user you want to post as.</li>
+      <li>Send an email to
+        <i>&lt;thread_id&gt;</i>+<i>&lt;token&gt;</i>@mail2quip.appspotmail.com</li>
+      <li>See your message posted to that thread.</li>
+    </ol>
+  </body>
+</html>
+{% endautoescape %}

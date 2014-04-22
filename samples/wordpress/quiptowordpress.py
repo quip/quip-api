@@ -16,7 +16,7 @@
 
 """Publishes a Quip document as a WordPress post.
 
-This is an sample app for the Quip API - https://quip.com/api/.
+This is a sample app for the Quip API - https://quip.com/api/.
 """
 
 import argparse
