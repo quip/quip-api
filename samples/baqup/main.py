@@ -76,6 +76,13 @@ def _run_backup(client, output_directory, root_folder_id):
             client, output_directory, 0)
         _descend_into_folder(user["desktop_folder_id"], processed_folder_ids,
             client, output_directory, 0)
+    logging.info("Looking for conversations")
+    conversation_threads = _get_conversation_threads(client)
+    if conversation_threads:
+        conversations_directory = os.path.join(output_directory, "Conversations")
+        _ensure_path_exists(conversations_directory)
+        for thread in conversation_threads:
+            _backup_thread(thread, client, conversations_directory, 1)
 
 def _descend_into_folder(folder_id, processed_folder_ids, client,
         output_directory, depth):
@@ -105,13 +112,14 @@ def _descend_into_folder(folder_id, processed_folder_ids, client,
             _descend_into_folder(child["folder_id"], processed_folder_ids,
                 client, folder_output_path, depth + 1)
         elif "thread_id" in child:
-            _backup_thread(child["thread_id"], client, folder_output_path,
-                depth + 1)
+            thread = client.get_thread(child["thread_id"])
+            _backup_thread(thread, client, folder_output_path, depth + 1)
 
-def _backup_thread(thread_id, client, output_directory, depth):
-    thread = client.get_thread(thread_id)
+def _backup_thread(thread, client, output_directory, depth):
+    thread_id = thread["thread"]["id"]
     title = thread["thread"]["title"]
-    logging.info("%sBacking up thread %s...", "  " * depth, title)
+    logging.info("%sBacking up thread %s (%s)...",
+        "  " * depth, title, thread_id)
     sanitized_title = _sanitize_title(title)
     if "html" in thread:
         document_file_name = sanitized_title + ".html"
@@ -127,7 +135,8 @@ def _backup_thread(thread_id, client, output_directory, depth):
             document_file.write(document_html.encode("utf-8"))
     messages = _get_thread_messages(thread_id, client)
     if messages:
-        message_file_name = sanitized_title + " (messages).html"
+        title_suffix = "messages" if "html" in thread else thread_id
+        message_file_name = "%s (%s).html" % (sanitized_title, title_suffix)
         messages_output_path = os.path.join(output_directory, message_file_name)
         messages_html = _MESSAGES_TEMPLATE % {
             "title": _escape(title),
@@ -156,6 +165,32 @@ def _get_thread_messages(thread_id, client):
             break
     messages.reverse()
     return messages
+
+def _get_conversation_threads(client):
+    max_updated_usec = None
+    threads = []
+    thread_ids = set()
+    while True:
+        chunk = client.get_recent_threads(
+            max_updated_usec=max_updated_usec, count=50).values()
+        chunk.sort(key=lambda t:t["thread"]["updated_usec"], reverse=True)
+        threads.extend([t for t in chunk
+            if "html" not in t and t["thread"]["id"] not in thread_ids])
+        thread_ids.update([t["thread"]["id"] for t in chunk])
+        if chunk:
+            chunk_max_updated_usec = chunk[-1]["thread"]["updated_usec"] - 1
+            if chunk_max_updated_usec == max_updated_usec:
+                logging.warning("New chunk had the same max_updated_usec (%d) "
+                    "as the last one, can't get any older threads",
+                    max_updated_usec)
+                break
+            max_updated_usec = chunk_max_updated_usec
+        else:
+            break
+        logging.info("  Got %d threads, paged back to %s",
+            len(threads), _format_usec(max_updated_usec))
+    threads.reverse()
+    return threads
 
 def _ensure_path_exists(directory_path):
     if os.path.exists(directory_path):

@@ -14,7 +14,6 @@ You can obtain a personal access token via [quip.com/api/personal-token](https:/
 
 The following items are not currently backed up:
 
-* Messages in conversations
 * Attachments to conversations
 * Images in documents
 * Contacts
