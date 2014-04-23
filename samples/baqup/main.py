@@ -20,11 +20,13 @@ This is a sample app for the Quip API - https://quip.com/api/.
 """
 
 import argparse
+import datetime
 import logging
 import os.path
 import re
 import shutil
 import urllib2
+import xml.sax.saxutils
 
 import quip
 
@@ -112,16 +114,48 @@ def _backup_thread(thread_id, client, output_directory, depth):
     logging.info("%sBacking up thread %s...", "  " * depth, title)
     sanitized_title = _sanitize_title(title)
     if "html" in thread:
-        file_name = sanitized_title + ".html"
-        thread_output_path = os.path.join(output_directory, file_name)
-        with open(thread_output_path, "w") as thread_file:
-            document_html = _DOCUMENT_TEMPLATE % {
-                "title": title,
-                "stylesheet_path": ("../" * depth) +
-                    _OUTPUT_STATIC_DIRECTORY_NAME + "/main.css",
-                "body": thread["html"],
-            }
-            thread_file.write(document_html.encode("utf-8"))
+        document_file_name = sanitized_title + ".html"
+        document_output_path = os.path.join(
+            output_directory, document_file_name)
+        document_html = _DOCUMENT_TEMPLATE % {
+            "title": _escape(title),
+            "stylesheet_path": ("../" * depth) +
+                _OUTPUT_STATIC_DIRECTORY_NAME + "/main.css",
+            "body": thread["html"],
+        }
+        with open(document_output_path, "w") as document_file:
+            document_file.write(document_html.encode("utf-8"))
+    messages = _get_thread_messages(thread_id, client)
+    if messages:
+        message_file_name = sanitized_title + " (messages).html"
+        messages_output_path = os.path.join(output_directory, message_file_name)
+        messages_html = _MESSAGES_TEMPLATE % {
+            "title": _escape(title),
+            "stylesheet_path": ("../" * depth) +
+                _OUTPUT_STATIC_DIRECTORY_NAME + "/main.css",
+            "body": "".join([_MESSAGE_TEMPLATE % {
+                "author_name":
+                    _escape(_get_user(client, message["author_id"])["name"]),
+                "timestamp": _escape(_format_usec(message["created_usec"])),
+                "message_text": _escape(message["text"]),
+            } for message in messages])
+        }
+        with open(messages_output_path, "w") as messages_file:
+            messages_file.write(messages_html.encode("utf-8"))
+
+def _get_thread_messages(thread_id, client):
+    max_created_usec = None
+    messages = []
+    while True:
+        chunk = client.get_messages(
+            thread_id, max_created_usec=max_created_usec, count=100)
+        messages.extend(chunk)
+        if chunk:
+            max_created_usec = chunk[-1]["created_usec"] - 1
+        else:
+            break
+    messages.reverse()
+    return messages
 
 def _ensure_path_exists(directory_path):
     if os.path.exists(directory_path):
@@ -138,12 +172,29 @@ def _sanitize_title(title):
         sanitized_title = sanitized_title[:_MAXIMUM_TITLE_LENGTH]
     return sanitized_title
 
+_user_cache = {}
+def _get_user(client, id):
+    if id not in _user_cache:
+        try:
+            _user_cache[id] = client.get_user(id)
+        except quip.QuipError:
+            _user_cache[id] = {"id": id, "name": "Unknown user %s" % id}
+    return _user_cache[id]
+
 def _read_template(template_file_name):
     template_path = os.path.join(_TEMPLATE_DIRECTORY, template_file_name)
     with open(template_path, "r") as template_file:
         return "".join(template_file.readlines())
 
+def _escape(s):
+    return xml.sax.saxutils.escape(s, {'"': "&quot;"})
+
+def _format_usec(usec):
+    return datetime.datetime.utcfromtimestamp(usec / 1000000.0).isoformat()
+
 _DOCUMENT_TEMPLATE = _read_template("document.html")
+_MESSAGE_TEMPLATE = _read_template("message.html")
+_MESSAGES_TEMPLATE = _read_template("messages.html")
 
 if __name__ == '__main__':
     main()

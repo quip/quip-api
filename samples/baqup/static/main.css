@@ -27,7 +27,6 @@ body {
     background: #fff;
     box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
     max-width: 900px;
-    min-height: 100%;
     margin: 0 auto;
     padding: 60px 95px;
     text-rendering: optimizeLegibility;
@@ -225,4 +224,22 @@ table td:first-child {
 
 table tr:first-child td {
     border-top: hidden;
+}
+
+/* Conversations */
+#messages {
+    background: #fff;
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+    max-width: 500px;
+    margin: 0 auto;
+    padding: 60px 95px;
+}
+
+#messages .message {
+    margin: 1em 0;
+}
+
+#messages .message i {
+    color: #999;
+    padding-left: .5em;
 }
