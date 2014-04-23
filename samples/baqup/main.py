@@ -33,6 +33,7 @@ _STATIC_DIRECTORY = os.path.abspath(os.path.join(_BASE_DIRECTORY, 'static'))
 _TEMPLATE_DIRECTORY = os.path.abspath(
     os.path.join(_BASE_DIRECTORY, 'templates'))
 _OUTPUT_STATIC_DIRECTORY_NAME = '_static'
+_MAXIMUM_TITLE_LENGTH = 64
 
 def main():
     logging.getLogger().setLevel(logging.DEBUG)
@@ -95,7 +96,7 @@ def _descend_into_folder(folder_id, processed_folder_ids, client,
         return
     title = folder["folder"]["title"]
     logging.info("%sBacking up folder %s...", "  " * depth, title)
-    folder_output_path = os.path.join(output_directory, title)
+    folder_output_path = os.path.join(output_directory, _sanitize_title(title))
     _ensure_path_exists(folder_output_path)
     for child in folder["children"]:
         if "folder_id" in child:
@@ -109,8 +110,7 @@ def _backup_thread(thread_id, client, output_directory, depth):
     thread = client.get_thread(thread_id)
     title = thread["thread"]["title"]
     logging.info("%sBacking up thread %s...", "  " * depth, title)
-    sanitized_title = re.sub(r"\s", " ", title)
-    sanitized_title = re.sub(r"(?u)[^- \w.]", "", sanitized_title)
+    sanitized_title = _sanitize_title(title)
     if "html" in thread:
         file_name = sanitized_title + ".html"
         thread_output_path = os.path.join(output_directory, file_name)
@@ -130,6 +130,13 @@ def _ensure_path_exists(directory_path):
 
 def _normalize_path(path):
     return os.path.abspath(os.path.expanduser(path))
+
+def _sanitize_title(title):
+    sanitized_title = re.sub(r"\s", " ", title)
+    sanitized_title = re.sub(r"(?u)[^- \w.]", "", sanitized_title)
+    if len(sanitized_title) > _MAXIMUM_TITLE_LENGTH:
+        sanitized_title = sanitized_title[:_MAXIMUM_TITLE_LENGTH]
+    return sanitized_title
 
 def _read_template(template_file_name):
     template_path = os.path.join(_TEMPLATE_DIRECTORY, template_file_name)
