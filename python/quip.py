@@ -119,7 +119,7 @@ class QuipClient(object):
             "member_ids": ",".join(member_ids),
         })
 
-    def update_folder(self, id, color=None, title=None):
+    def update_folder(self, folder_id, color=None, title=None):
         return self._fetch_json("folders/update", post_data={
             "folder_id": folder_id,
             "color": color,
