@@ -8,8 +8,15 @@ This is the official repository for the [Quip API](https://quip.com/api/).
 
 ## Client Libraries
 
+### Official
+
 * [Python](python)
 * [node.js](nodejs)
+
+### Community
+
+* [Ruby](https://github.com/jacamat/quip-ruby) (from [@jacamat](https://github.com/jacamat))
+* [Go](https://github.com/mduvall/go-quip) (from [@mduvall](https://github.com/mduvall))
 
 ## Sample Apps
 
