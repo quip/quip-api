@@ -26,6 +26,7 @@ import os.path
 import re
 import shutil
 import urllib2
+import xml.etree.cElementTree
 import xml.sax.saxutils
 
 import quip
@@ -122,6 +123,26 @@ def _backup_thread(thread, client, output_directory, depth):
         "  " * depth, title, thread_id)
     sanitized_title = _sanitize_title(title)
     if "html" in thread:
+        # Parse the document
+        tree = client.parse_document_html(thread["html"])
+        # Download each image and replace with the new URL
+        for img in tree.iter("img"):
+            src = img.get("src")
+            if not src.startswith("/blob"):
+                continue
+            _, _, thread_id, blob_id = src.split("/")
+            blob_response = client.get_blob(thread_id, blob_id)
+            mimetype = blob_response.info().get("Content-Type")
+            image_filename = blob_response.info().get(
+                "Content-Disposition").split('"')[-2]
+            image_output_path = os.path.join(output_directory, image_filename)
+            with open(image_output_path, "w") as image_file:
+                image_file.write(blob_response.read())
+            img.set("src", image_filename)
+        html = unicode(xml.etree.cElementTree.tostring(tree))
+        # Strip the <html> tags that were introduced in parse_document_html
+        html = html[6:-7]
+
         document_file_name = sanitized_title + ".html"
         document_output_path = os.path.join(
             output_directory, document_file_name)
@@ -129,7 +150,7 @@ def _backup_thread(thread, client, output_directory, depth):
             "title": _escape(title),
             "stylesheet_path": ("../" * depth) +
                 _OUTPUT_STATIC_DIRECTORY_NAME + "/main.css",
-            "body": thread["html"],
+            "body": html,
         }
         with open(document_output_path, "w") as document_file:
             document_file.write(document_html.encode("utf-8"))
