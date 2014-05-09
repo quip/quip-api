@@ -281,6 +281,27 @@ class QuipClient(object):
         document_xml = "<html>" + document_html + "</html>"
         return xml.etree.cElementTree.fromstring(document_xml.encode("utf-8"))
 
+    def get_blob(self, thread_id, blob_id):
+        """Returns a file-like object with the contents of the given blob from
+        the given thread.
+
+        The object is described in detail here:
+        https://docs.python.org/2/library/urllib2.html#urllib2.urlopen
+        """
+        request = urllib2.Request(
+            url=self._url("blob/%s/%s" % (thread_id, blob_id)))
+        if self.access_token:
+            request.add_header("Authorization", "Bearer " + self.access_token)
+        try:
+            return urllib2.urlopen(request, timeout=self.request_timeout)
+        except urllib2.HTTPError, error:
+            try:
+                # Extract the developer-friendly error message from the response
+                message = json.loads(error.read())["error_description"]
+            except Exception:
+                raise error
+            raise QuipError(error.code, message, error)
+
     def _fetch_json(self, path, post_data=None, **args):
         request = urllib2.Request(url=self._url(path, **args))
         if post_data:
@@ -296,7 +317,7 @@ class QuipClient(object):
             try:
                 # Extract the developer-friendly error message from the response
                 message = json.loads(error.read())["error_description"]
-            except:
+            except Exception:
                 raise error
             raise QuipError(error.code, message, error)
 
