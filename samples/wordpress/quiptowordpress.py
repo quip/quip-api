@@ -56,9 +56,14 @@ def main():
             _, _, thread_id, blob_id = src.split("/")
             blob_response = client.get_blob(thread_id, blob_id)
             mimetype = blob_response.info().get("Content-Type")
+            ext = "." + mimetype.split("/")[-1]
+            filename = blob_response.info().get(
+                "Content-Disposition").split('"')[-2]
+            if not filename.endswith(ext):
+                filename += ext
             result = server.wp.uploadFile(
                 0, args.wordpress_username, args.wordpress_password, {
-                    "name": "%s.%s" % (blob_id, mimetype.split("/")[-1]),
+                    "name": filename,
                     "type": mimetype,
                     "bits": xmlrpclib.Binary(blob_response.read()),
                     "overwrite": True,

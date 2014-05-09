@@ -132,7 +132,6 @@ def _backup_thread(thread, client, output_directory, depth):
                 continue
             _, _, thread_id, blob_id = src.split("/")
             blob_response = client.get_blob(thread_id, blob_id)
-            mimetype = blob_response.info().get("Content-Type")
             image_filename = blob_response.info().get(
                 "Content-Disposition").split('"')[-2]
             image_output_path = os.path.join(output_directory, image_filename)
