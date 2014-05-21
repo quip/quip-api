@@ -30,9 +30,10 @@ given document, which is useful for automating a task list.
 """
 
 import json
-import xml.etree.cElementTree
+import logging
+import requests
 import urllib
-import urllib2
+import xml.etree.cElementTree
 
 
 class QuipClient(object):
@@ -71,9 +72,13 @@ class QuipClient(object):
 
     def get_authorization_url(self, redirect_uri, state=None):
         """Returns the URL the user should be redirected to to sign in."""
-        return self._url(
-            "oauth/login", redirect_uri=redirect_uri, state=state,
-            response_type="code", client_id=self.client_id)
+        return self._url("oauth/login?") + urllib.urlencode(dict(
+            (k, v) for k, v in {
+                "redirect_uri": redirect_uri,
+                "state": state,
+                "response_type": "code",
+                "client_id": self.client_id,
+            }.items() if v or isinstance(v, int)))
 
     def get_access_token(self, redirect_uri, code):
         """Exchanges a verification code for an access_token.
@@ -282,51 +287,47 @@ class QuipClient(object):
         return xml.etree.cElementTree.fromstring(document_xml.encode("utf-8"))
 
     def get_blob(self, thread_id, blob_id):
-        """Returns a file-like object with the contents of the given blob from
-        the given thread.
+        """Returns a requests.Response object with the contents of the given
+        blob from the given thread. Call response.iter_content() for the binary.
 
-        The object is described in detail here:
-        https://docs.python.org/2/library/urllib2.html#urllib2.urlopen
+        The response object is described in detail here:
+        http://docs.python-requests.org/en/latest/api/
         """
-        request = urllib2.Request(
-            url=self._url("blob/%s/%s" % (thread_id, blob_id)))
+        return self._fetch("blob/%s/%s" % (thread_id, blob_id))
+
+    def put_blob(self, thread_id, blob):
+        """Uploads an image or other blob to the given Quip thread. Returns an
+        ID that can be used to add the image to the document of the thread.
+
+        blob can be any file-like object.
+        """
+        return self._fetch_json("blob/" + thread_id, files={"blob": blob})
+
+    def _fetch_json(self, path, **args):
+        return self._fetch(path, **args).json()
+
+    def _fetch(self, path, post_data=None, files=None, **args):
+        headers = None
         if self.access_token:
-            request.add_header("Authorization", "Bearer " + self.access_token)
+            headers = {"Authorization": "Bearer " + self.access_token}
         try:
-            return urllib2.urlopen(request, timeout=self.request_timeout)
-        except urllib2.HTTPError, error:
+            response = requests.request(
+                "post" if post_data or files else "get", self._url(path),
+                params=args, timeout=self.request_timeout, data=post_data,
+                files=files, headers=headers)
+            response.raise_for_status()
+            return response
+        except requests.RequestException, error:
             try:
                 # Extract the developer-friendly error message from the response
-                message = json.loads(error.read())["error_description"]
+                message = error.response.json()["error_description"]
             except Exception:
                 raise error
-            raise QuipError(error.code, message, error)
+            raise QuipError(error.response.status_code, message, error)
 
-    def _fetch_json(self, path, post_data=None, **args):
-        request = urllib2.Request(url=self._url(path, **args))
-        if post_data:
-            post_data = dict((k, v) for k, v in post_data.items()
-                             if v or isinstance(v, int))
-            request.data = urllib.urlencode(post_data)
-        if self.access_token:
-            request.add_header("Authorization", "Bearer " + self.access_token)
-        try:
-            return json.loads(
-                urllib2.urlopen(request, timeout=self.request_timeout).read())
-        except urllib2.HTTPError, error:
-            try:
-                # Extract the developer-friendly error message from the response
-                message = json.loads(error.read())["error_description"]
-            except Exception:
-                raise error
-            raise QuipError(error.code, message, error)
 
-    def _url(self, path, **args):
-        url = self.base_url + "/1/" + path
-        args = dict((k, v) for k, v in args.items() if v)
-        if args:
-            url += "?" + urllib.urlencode(args)
-        return url
+    def _url(self, path):
+        return self.base_url + "/1/" + path
 
 
 class QuipError(Exception):
@@ -334,3 +335,6 @@ class QuipError(Exception):
         Exception.__init__(self, "%d: %s" % (code, message))
         self.code = code
         self.http_error = http_error
+
+
+logging.getLogger("requests").setLevel(logging.WARNING)
