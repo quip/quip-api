@@ -132,11 +132,12 @@ def _backup_thread(thread, client, output_directory, depth):
                 continue
             _, _, thread_id, blob_id = src.split("/")
             blob_response = client.get_blob(thread_id, blob_id)
-            image_filename = blob_response.info().get(
-                "Content-Disposition").split('"')[-2]
+            image_filename = blob_response.headers["Content-Disposition"].split(
+                '"')[-2]
             image_output_path = os.path.join(output_directory, image_filename)
             with open(image_output_path, "w") as image_file:
-                image_file.write(blob_response.read())
+                for chunk in blob_response.iter_content():
+                    image_file.write(chunk)
             img.set("src", image_filename)
         html = unicode(xml.etree.cElementTree.tostring(tree))
         # Strip the <html> tags that were introduced in parse_document_html
