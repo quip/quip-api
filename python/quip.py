@@ -247,6 +247,23 @@ class QuipClient(object):
             section_id=section_id,
             operation=self.AFTER_SECTION)
 
+    def toggle_checkmark(self, thread_id, item, checked=True):
+        """Sets the checked state of the given list item to the given state.
+
+            client = quip.QuipClient(...)
+            list = client.get_first_list(thread_id)
+            client.toggle_checkmark(thread_id, list[0])
+
+        """
+        if checked:
+            item.attrib["class"] = "checked"
+        else:
+            item.attrib["class"] = ""
+        self.edit_document(thread_id=thread_id,
+                           content=xml.etree.cElementTree.tostring(item),
+                           section_id=item.attrib["id"],
+                           operation=self.REPLACE_SECTION)
+
     def get_first_list(self, thread_id=None, document_html=None):
         """Returns the `ElementTree` of the first list in the document.
 
