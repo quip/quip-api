@@ -30,9 +30,8 @@ given document, which is useful for automating a task list.
 """
 
 import json
-import logging
-import requests
 import urllib
+import urllib2
 import xml.etree.cElementTree
 
 
@@ -72,13 +71,9 @@ class QuipClient(object):
 
     def get_authorization_url(self, redirect_uri, state=None):
         """Returns the URL the user should be redirected to to sign in."""
-        return self._url("oauth/login?") + urllib.urlencode(dict(
-            (k, v) for k, v in {
-                "redirect_uri": redirect_uri,
-                "state": state,
-                "response_type": "code",
-                "client_id": self.client_id,
-            }.items() if v or isinstance(v, int)))
+        return self._url(
+            "oauth/login", redirect_uri=redirect_uri, state=state,
+            response_type="code", client_id=self.client_id)
 
     def get_access_token(self, redirect_uri, code):
         """Exchanges a verification code for an access_token.
@@ -304,36 +299,43 @@ class QuipClient(object):
         return xml.etree.cElementTree.fromstring(document_xml.encode("utf-8"))
 
     def get_blob(self, thread_id, blob_id):
-        """Returns a requests.Response object with the contents of the given
-        blob from the given thread. Call response.iter_content() for the binary.
+        """Returns a file-like object with the contents of the given blob from
+        the given thread.
 
-        The response object is described in detail here:
-        http://docs.python-requests.org/en/latest/api/
+        The object is described in detail here:
+        https://docs.python.org/2/library/urllib2.html#urllib2.urlopen
         """
-        return self._fetch("blob/%s/%s" % (thread_id, blob_id))
+        request = urllib2.Request(
+            url=self._url("blob/%s/%s" % (thread_id, blob_id)))
+        if self.access_token:
+            request.add_header("Authorization", "Bearer " + self.access_token)
+        try:
+            return urllib2.urlopen(request, timeout=self.request_timeout)
+        except urllib2.HTTPError, error:
+            try:
+                # Extract the developer-friendly error message from the response
+                message = json.loads(error.read())["error_description"]
+            except Exception:
+                raise error
+            raise QuipError(error.code, message, error)
 
     def put_blob(self, thread_id, blob):
         """Uploads an image or other blob to the given Quip thread. Returns an
         ID that can be used to add the image to the document of the thread.
 
-        blob can be any file-like object.
+        blob can be any file-like object. Requires the 'requests' module.
         """
-        return self._fetch_json("blob/" + thread_id, files={"blob": blob})
-
-    def _fetch_json(self, path, **args):
-        return self._fetch(path, **args).json()
-
-    def _fetch(self, path, post_data=None, files=None, **args):
+        import requests
+        url = "blob/" + thread_id
         headers = None
         if self.access_token:
             headers = {"Authorization": "Bearer " + self.access_token}
         try:
             response = requests.request(
-                "post" if post_data or files else "get", self._url(path),
-                params=args, timeout=self.request_timeout, data=post_data,
-                files=files, headers=headers)
+                "post", self._url(url), timeout=self.request_timeout,
+                files={"blob": blob}, headers=headers)
             response.raise_for_status()
-            return response
+            return response.json()
         except requests.RequestException, error:
             try:
                 # Extract the developer-friendly error message from the response
@@ -342,9 +344,44 @@ class QuipClient(object):
                 raise error
             raise QuipError(error.response.status_code, message, error)
 
+    def _fetch_json(self, path, post_data=None, blob=None, **args):
+        request = urllib2.Request(url=self._url(path, **args))
+        if post_data:
+            post_data = dict((k, v) for k, v in post_data.items()
+                             if v or isinstance(v, int))
+            request.data = urllib.urlencode(post_data)
+        elif blob:
+            boundary = "----------quipQUIP"
+            request.data = "\r\n".join([
+                "--" + boundary,
+                'Content-Disposition: form-data; name="blob"; filename="blob"',
+                "Content-Type: application/octet-stream",
+                "",
+                unicode(blob.read()),
+                "--" + boundary,
+                "",
+            ])
+            request.add_header(
+                "Content-type", "multipart/form-data; boundary=%s" % boundary)
+        if self.access_token:
+            request.add_header("Authorization", "Bearer " + self.access_token)
+        try:
+            return json.loads(
+                urllib2.urlopen(request, timeout=self.request_timeout).read())
+        except urllib2.HTTPError, error:
+            try:
+                # Extract the developer-friendly error message from the response
+                message = json.loads(error.read())["error_description"]
+            except Exception:
+                raise error
+            raise QuipError(error.code, message, error)
 
-    def _url(self, path):
-        return self.base_url + "/1/" + path
+    def _url(self, path, **args):
+        url = self.base_url + "/1/" + path
+        args = dict((k, v) for k, v in args.items() if v)
+        if args:
+            url += "?" + urllib.urlencode(args)
+        return url
 
 
 class QuipError(Exception):
@@ -352,6 +389,3 @@ class QuipError(Exception):
         Exception.__init__(self, "%d: %s" % (code, message))
         self.code = code
         self.http_error = http_error
-
-
-logging.getLogger("requests").setLevel(logging.WARNING)
