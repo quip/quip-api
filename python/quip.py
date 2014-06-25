@@ -344,25 +344,12 @@ class QuipClient(object):
                 raise error
             raise QuipError(error.response.status_code, message, error)
 
-    def _fetch_json(self, path, post_data=None, blob=None, **args):
+    def _fetch_json(self, path, post_data=None, **args):
         request = urllib2.Request(url=self._url(path, **args))
         if post_data:
             post_data = dict((k, v) for k, v in post_data.items()
                              if v or isinstance(v, int))
             request.data = urllib.urlencode(post_data)
-        elif blob:
-            boundary = "----------quipQUIP"
-            request.data = "\r\n".join([
-                "--" + boundary,
-                'Content-Disposition: form-data; name="blob"; filename="blob"',
-                "Content-Type: application/octet-stream",
-                "",
-                unicode(blob.read()),
-                "--" + boundary,
-                "",
-            ])
-            request.add_header(
-                "Content-type", "multipart/form-data; boundary=%s" % boundary)
         if self.access_token:
             request.add_header("Authorization", "Bearer " + self.access_token)
         try:
