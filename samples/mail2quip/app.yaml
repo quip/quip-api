@@ -17,6 +17,7 @@ handlers:
 
 - url: /.*
   script: app.application
+  secure: always
 
 libraries:
 - name: webapp2
