@@ -57,7 +57,8 @@ def main():
     args = parser.parse_args()
 
     client = quip.QuipClient(
-        access_token=args.access_token, base_url=args.quip_api_base_url)
+        access_token=args.access_token, base_url=args.quip_api_base_url,
+        retry_rate_limit=True)
     output_directory = _normalize_path(args.output_directory)
     shutil.rmtree(output_directory, ignore_errors=True)
     output_static_diretory = os.path.join(

@@ -32,6 +32,7 @@ given document, which is useful for automating a task list.
 import datetime
 import json
 import logging
+import time
 import urllib
 import urllib2
 import xml.etree.cElementTree
@@ -55,7 +56,7 @@ class QuipClient(object):
     BLUE = range(5)
 
     def __init__(self, access_token=None, client_id=None, client_secret=None,
-                 base_url=None, request_timeout=None):
+                 base_url=None, request_timeout=None, retry_rate_limit=False):
         """Constructs a Quip API client.
 
         If `access_token` is given, all of the API methods in the client
@@ -70,6 +71,7 @@ class QuipClient(object):
         self.client_secret = client_secret
         self.base_url = base_url if base_url else "https://platform.quip.com"
         self.request_timeout = request_timeout if request_timeout else 10
+        self.retry_rate_limit = retry_rate_limit
 
     def get_authorization_url(self, redirect_uri, state=None):
         """Returns the URL the user should be redirected to to sign in."""
@@ -594,7 +596,16 @@ class QuipClient(object):
                 message = json.loads(error.read())["error_description"]
             except Exception:
                 raise error
-            raise QuipError(error.code, message, error)
+            if (self.retry_rate_limit and error.code == 503 and
+                message == "Over Rate Limit"):
+                # Retry later.
+                reset_time = float(error.headers.get("X-RateLimit-Reset"))
+                delay = max(2, reset_time - time.time() + 1)
+                logging.warning("Rate Limit, delaying for %d seconds" % delay)
+                time.sleep(delay)
+                return self.get_blob(thread_id, blob_id)
+            else:
+                raise QuipError(error.code, message, error)
 
     def put_blob(self, thread_id, blob, name=None):
         """Uploads an image or other blob to the given Quip thread. Returns an
@@ -640,7 +651,16 @@ class QuipClient(object):
                 message = json.loads(error.read())["error_description"]
             except Exception:
                 raise error
-            raise QuipError(error.code, message, error)
+            if (self.retry_rate_limit and error.code == 503 and
+                message == "Over Rate Limit"):
+                # Retry later.
+                reset_time = float(error.headers.get("X-RateLimit-Reset"))
+                delay = max(2, reset_time - time.time() + 1)
+                logging.warning("Rate Limit, delaying for %d seconds" % delay)
+                time.sleep(delay)
+                return self._fetch_json(path, post_data, **args)
+            else:
+                raise QuipError(error.code, message, error)
 
     def _clean(self, **args):
         return dict((k, str(v) if isinstance(v, int) else v.encode("utf-8"))
