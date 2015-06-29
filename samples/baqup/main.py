@@ -59,12 +59,13 @@ def main():
     client = quip.QuipClient(
         access_token=args.access_token, base_url=args.quip_api_base_url,
         retry_rate_limit=True)
-    output_directory = _normalize_path(args.output_directory)
+    output_directory = os.path.join(
+        _normalize_path(args.output_directory), "baqup")
+    _ensure_path_exists(output_directory)
     shutil.rmtree(output_directory, ignore_errors=True)
     output_static_diretory = os.path.join(
         output_directory, _OUTPUT_STATIC_DIRECTORY_NAME)
     shutil.copytree(_STATIC_DIRECTORY, output_static_diretory)
-    _ensure_path_exists(output_directory)
     _run_backup(client, output_directory, args.root_folder_id)
 
 def _run_backup(client, output_directory, root_folder_id):
