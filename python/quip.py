@@ -663,8 +663,11 @@ class QuipClient(object):
                 raise QuipError(error.code, message, error)
 
     def _clean(self, **args):
-        return dict((k, str(v) if isinstance(v, int) else v.encode("utf-8"))
-                    for k, v in args.items() if v or isinstance(v, int))
+        # We only expect ints or strings, but on Windows ints can become longs
+        return dict((k, str(v) if isinstance(
+            v, (int, float, long, complex)) else v.encode("utf-8"))
+                    for k, v in args.items() if v or isinstance(
+                            v, (int, float, long, complex)))
 
     def _url(self, path, **args):
         url = self.base_url + "/1/" + path
