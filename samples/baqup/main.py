@@ -25,12 +25,12 @@ import logging
 import os.path
 import re
 import shutil
+import sys
 import urllib2
 import xml.etree.cElementTree
 import xml.sax.saxutils
-import sys  
 
-reload(sys)  
+reload(sys)
 sys.setdefaultencoding('utf8')
 
 import quip

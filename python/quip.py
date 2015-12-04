@@ -32,13 +32,13 @@ given document, which is useful for automating a task list.
 import datetime
 import json
 import logging
+import sys
 import time
 import urllib
 import urllib2
 import xml.etree.cElementTree
-import sys  
 
-reload(sys)  
+reload(sys)
 sys.setdefaultencoding('utf8')
 
 
