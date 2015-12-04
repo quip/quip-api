@@ -36,6 +36,10 @@ import time
 import urllib
 import urllib2
 import xml.etree.cElementTree
+import sys  
+
+reload(sys)  
+sys.setdefaultencoding('utf8')
 
 
 class QuipClient(object):
