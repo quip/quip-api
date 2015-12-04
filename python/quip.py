@@ -32,10 +32,14 @@ given document, which is useful for automating a task list.
 import datetime
 import json
 import logging
+import sys
 import time
 import urllib
 import urllib2
 import xml.etree.cElementTree
+
+reload(sys)
+sys.setdefaultencoding('utf8')
 
 
 class QuipClient(object):
