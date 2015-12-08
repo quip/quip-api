@@ -62,7 +62,7 @@ def main():
 
     client = quip.QuipClient(
         access_token=args.access_token, base_url=args.quip_api_base_url,
-        retry_rate_limit=True)
+        retry_rate_limit=True, request_timeout=120)
     output_directory = os.path.join(
         _normalize_path(args.output_directory), "baqup")
     _ensure_path_exists(output_directory)
