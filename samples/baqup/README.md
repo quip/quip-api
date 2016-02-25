@@ -18,6 +18,6 @@ The following items are not currently backed up:
 * Images in documents
 * Contacts
 
-You may run into rate limitting issues depending on the size of your account.
+You may run into rate limiting issues depending on the size of your account.
 
 Resuming of interrupted backups is currently not supported.
