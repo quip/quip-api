@@ -49,7 +49,7 @@ class HookHandler(webapp2.RequestHandler):
             self.error(400)
             return
         thread_id = self.request.get("thread_id")
-        if not thread_id or len(thread_id) != 11:
+        if not thread_id:
             self.error(400)
             return
 
