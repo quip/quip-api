@@ -18,6 +18,7 @@ This is the official repository for the [Quip API](https://quip.com/api/).
 * [node.js](https://github.com/kwent/quip.js) (from [@kwent](https://github.com/kwent))
 * [Ruby](https://github.com/jacamat/quip-ruby) (from [@jacamat](https://github.com/jacamat))
 * [Go](https://github.com/mduvall/go-quip) (from [@mduvall](https://github.com/mduvall))
+* [Elixir](https://github.com/mmartinson/e_quip) (from [@mmartinson](https://github.com/mmartinson))
 
 ## Sample Apps
 
