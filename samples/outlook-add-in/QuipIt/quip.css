@@ -1,0 +1,10 @@
+﻿.quip-open-thread,
+.quip-open-thread:hover,
+.quip-open-thread:focus,
+.quip-open-thread:active {
+	text-decoration: none;
+}
+
+.quip-status {
+	line-height: 32px;
+}
