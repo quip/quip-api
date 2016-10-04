@@ -16,7 +16,7 @@ app.use(express.static('QuipIt', {
 }));
 
 app.post('/quip-it', function(request, response) {
-    var userEmail = request.body.userEmail;
+    var userEmail = request.body.userEmail.toLowerCase();
     var accessToken = config.accessTokens[userEmail];
     if (!accessToken) {
       console.error("No access token for ", userEmail);
@@ -53,7 +53,7 @@ app.post('/quip-it', function(request, response) {
         client.newMessage({
           threadId: result.thread.id,
           content: content
-        }, callback.bind(null, result));
+        }, callback.bind(null, null, result));
       }
     ], function(error, result) {
       if (error) {
