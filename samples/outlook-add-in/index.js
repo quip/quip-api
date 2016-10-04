@@ -28,16 +28,10 @@ app.post('/quip-it', function(request, response) {
     var body = request.body.body;
     var client = new quip.Client({accessToken: accessToken});
     async.waterfall([
-      client.getContacts.bind(client),
-      function createNewDocument(contacts, callback) {
-        var memberIds = [];
-        contacts.forEach(function(contact) {
-          if (contact.emails.some(function(email) {
-            return email == fromEmail || toEmails.indexOf(email) >= 0;
-          })) {
-            memberIds.push(contact.id);
-          }
-        });
+      client.getRecentThreads.bind(client, {count:1}),
+      function createNewDocument(recentThreads, callback) {
+        var threadIds = Object.keys(recentThreads);
+        var memberIds = threadIds.length ? recentThreads[threadIds[0]].shared_folder_ids : [];
         client.newDocument({
             content: body,
             title: subject,
