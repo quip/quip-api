@@ -20,8 +20,8 @@ Typical usage:
 
     client = quip.QuipClient(access_token=...)
     user = client.get_authenticated_user()
-    desktop = client.get_folder(user["desktop_folder_id"])
-    print "There are", len(desktop["children"]), "items on the desktop"
+    starred = client.get_folder(user["starred_folder_id"])
+    print "There are", len(starred["children"]), "items in your starred folder"
 
 In addition to standard getters and setters, we provide a few convenience
 methods for document editing. For example, you can use `add_to_first_list`
@@ -217,7 +217,7 @@ class QuipClient(object):
 
             client = quip.QuipClient(...)
             user = client.get_authenticated_user()
-            client.new_document(..., member_ids=[user["archive_folder_id"]])
+            client.new_document(..., member_ids=[user["private_folder_id"]])
 
         """
         return self._fetch_json("threads/new-document", post_data={

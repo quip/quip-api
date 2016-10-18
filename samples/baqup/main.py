@@ -79,9 +79,9 @@ def _run_backup(client, output_directory, root_folder_id):
         _descend_into_folder(root_folder_id, processed_folder_ids,
             client, output_directory, 0)
     else:
-        _descend_into_folder(user["archive_folder_id"], processed_folder_ids,
+        _descend_into_folder(user["private_folder_id"], processed_folder_ids,
             client, output_directory, 0)
-        _descend_into_folder(user["desktop_folder_id"], processed_folder_ids,
+        _descend_into_folder(user["starred_folder_id"], processed_folder_ids,
             client, output_directory, 0)
     logging.info("Looking for conversations")
     conversation_threads = _get_conversation_threads(client)
