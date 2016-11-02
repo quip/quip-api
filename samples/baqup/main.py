@@ -110,7 +110,7 @@ def _descend_into_folder(folder_id, processed_folder_ids, client,
         logging.warning("%sSkipped over folder %s due to HTTP error %d.",
             "  " * depth, folder_id, e.code)
         return
-    title = folder["folder"]["title"]
+    title = folder["folder"].get("title", "Folder %s" % folder_id)
     logging.info("%sBacking up folder %s...", "  " * depth, title)
     folder_output_path = os.path.join(output_directory, _sanitize_title(title))
     _ensure_path_exists(folder_output_path)
@@ -138,8 +138,12 @@ def _backup_thread(thread, client, output_directory, depth):
                 continue
             _, _, thread_id, blob_id = src.split("/")
             blob_response = client.get_blob(thread_id, blob_id)
-            image_filename = blob_response.info().get(
-                "Content-Disposition").split('"')[-2]
+            content_disposition = blob_response.info().get(
+                "Content-Disposition")
+            if content_disposition:
+                image_filename = content_disposition.split('"')[-2]
+            else:
+                image_filename = "image.png"
             image_output_path = os.path.join(output_directory, image_filename)
             with open(image_output_path, "w") as image_file:
                 image_file.write(blob_response.read())
