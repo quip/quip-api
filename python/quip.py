@@ -638,6 +638,11 @@ class QuipClient(object):
                 raise error
             raise QuipError(error.response.status_code, message, error)
 
+    def new_websocket(self):
+        """Returns a websocket URL to connect to. The URL may expire if no
+        connection is initiated within 60 seconds."""
+        return self._fetch_json("websockets/new")
+
     def _fetch_json(self, path, post_data=None, **args):
         request = urllib2.Request(url=self._url(path, **args))
         if post_data:
