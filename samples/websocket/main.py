@@ -16,10 +16,12 @@ import websocket
 
 def open_websocket(url):
     def on_message(ws, message):
-        print "message: " + json.dumps(json.loads(message), indent=4)
+        print "message:"
+        print json.dumps(json.loads(message), indent=4)
 
     def on_error(ws, error):
-        print "error: " + error
+        print "error:"
+        print error
 
     def on_close(ws):
         print "### connection closed ###"
