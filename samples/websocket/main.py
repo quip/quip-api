@@ -11,8 +11,12 @@ import argparse
 import json
 import logging
 import quip
+import thread
+import time
 import websocket
 
+
+HEARTBEAT_INTERVAL = 20
 
 def open_websocket(url):
     def on_message(ws, message):
@@ -28,6 +32,13 @@ def open_websocket(url):
 
     def on_open(ws):
         print "### connection established ###"
+
+        def run(*args):
+            while True:
+                time.sleep(HEARTBEAT_INTERVAL)
+                ws.send(json.dumps({"type": "heartbeat"}))
+
+        thread.start_new_thread(run, ())
 
     websocket.enableTrace(True)
     ws = websocket.WebSocketApp(
