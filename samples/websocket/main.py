@@ -2,7 +2,7 @@
 #
 # Copyright Quip 2016
 
-"""Opens a websocket and listens for updates from a thread
+"""Opens a websocket and listens for updates from Quip
 
 This is a sample app for the Quip API - https://quip.com/api/.
 """
@@ -40,8 +40,6 @@ def main():
     parser = argparse.ArgumentParser(description="Twitter gateway for Quip.")
     parser.add_argument("--access_token", required=True,
         help="User's access token")
-    parser.add_argument("--thread_id", required=True,
-        help="The quip thread that mentions should be sent to.")
     parser.add_argument("--quip_api_base_url", default=None,
         help="Alternative base URL for the Quip API. If none is provided, "
              "https://platform.quip.com will be used")

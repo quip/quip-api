@@ -29,7 +29,7 @@ This is the official repository for the [Quip API](https://quip.com/api/).
 * [`twitterbot`](samples/twitterbot): Post Twitter messages to a Quip thread via the Twitter streaming API. _Python on the command line_
 * [`webhooks`](samples/webhooks): Inbound [Webhook](http://en.wikipedia.org/wiki/Webhook) support for posting GitHub, Crashlytics, PagerDuty and other service notifications to threads. _Python on App Engine_
 * [`wordpress`](samples/wordpress): Publish Quip documents to [WordPress](http://wordpress.org/). _Python on the command line_
-* [`websocket`](samples/websocket): Receive messages from a Quip thread in real time. _Python on the command line_
+* [`websocket`](samples/websocket): Receive messages from Quip in real time. _Python on the command line_
 
 ### Community
 

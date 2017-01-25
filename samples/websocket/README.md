@@ -1,11 +1,11 @@
-# Receive Realtime Updates from Quip
+# Receive messages from Quip in real time
 
-A simple script to open up a websocket and listen for updates from a thread in Quip.
+A simple script to open up a websocket and listen for updates from Quip.
 
 ## Running
 
 ```
-./main.py --access_token="..." --thread_id="..."
+./main.py --access_token="..."
 ```
 
 You can obtain a personal access token via [quip.com/api/personal-token](https://quip.com/api/personal-token).
