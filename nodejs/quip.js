@@ -343,6 +343,13 @@ Client.prototype.removeThreadMembers = function(options, callback) {
     this.call_('threads/remove-members', callback, args);
 };
 
+Client.prototype.addBlob = function(options, callback) {
+  var args = {
+    'blob' : options.blob
+  };
+  this.call_('blob/' + options.threadId, callback, args);
+}
+
 /**
  * @param {string} path
  * @param {function(Error, Object)} callback
@@ -355,22 +362,45 @@ Client.prototype.call_ = function(path, callback, postArguments) {
         path: '/1/' + path,
         headers: {}
     };
+
     if (this.accessToken) {
         requestOptions.headers['Authorization'] = 'Bearer ' + this.accessToken;
     }
     var requestBody = null;
     if (postArguments) {
-        for (var name in postArguments) {
+        if (postArguments.blob) {
+          requestOptions.method = 'POST';
+          var crlf = "\n",
+            boundaryKey = Math.random().toString(16),
+            boundary = `----------------------------${boundaryKey}`,
+            delimeter = `${crlf}--${boundary}`,
+            closeDelimeter = `${delimeter}--`,
+            headers = [
+              'Content-Disposition: form-data; name="blob"; file="test.jpg"' + crlf + 'Content-Type: application/octet-stream' + crlf 
+        
+            ],
+            multipartBody;
+
+            requestOptions.headers['Content-Type'] =  'multipart/form-data; boundary=' + boundary;
+
+            requestBody = Buffer.concat([
+              new Buffer(delimeter + crlf + headers.join('') + crlf),
+                postArguments.blob,
+                new Buffer(closeDelimeter)]);
+            requestOptions.headers['Content-Length']  = Buffer.byteLength(requestBody);
+        } else {
+          for (var name in postArguments) {
             if (!postArguments[name]) {
                 delete postArguments[name];
             }
-        }
-        requestOptions.method = 'POST';
-        requestBody = querystring.stringify(postArguments);
-        requestOptions.headers['Content-Type'] =
+          }
+          requestOptions.method = 'POST';
+          requestBody = querystring.stringify(postArguments);
+          requestOptions.headers['Content-Type'] =
             'application/x-www-form-urlencoded';
-        requestOptions.headers['Content-Length'] =
+          requestOptions.headers['Content-Length'] =
             Buffer.byteLength(requestBody);
+        }
     } else {
         requestOptions.method = 'GET';
     }
@@ -398,6 +428,7 @@ Client.prototype.call_ = function(path, callback, postArguments) {
     request.on('error', function(error) {
         callback(error, null);
     });
+
     if (requestBody) {
         request.write(requestBody);
     }
