@@ -130,7 +130,14 @@ def _backup_thread(thread, client, output_directory, depth):
     sanitized_title = _sanitize_title(title)
     if "html" in thread:
         # Parse the document
-        tree = client.parse_document_html(thread["html"])
+        try:
+            tree = client.parse_document_html(thread["html"])
+        except xml.etree.cElementTree.ParseError as e:
+            logging.error(
+                "Error parsing thread %s (%s), skipping backup: %s" % (
+                    title, thread_id, e))
+            return
+
         # Download each image and replace with the new URL
         for img in tree.iter("img"):
             src = img.get("src")
