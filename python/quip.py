@@ -49,6 +49,24 @@ except AttributeError:
     raise Exception(
         "Using the Quip API requires an SSL library that supports TLS versions "
         ">= 1.1; your Python + OpenSSL installation must be upgraded.")
+# After 2017-02, the Quip API HTTPS endpoint requires TLS version 1.1 or later;
+# TLS version 1.0 is disabled due to extensive security vulnerabilities.
+#
+# - macOS: At this time of this writing, macOS ships with Python 2.7 and
+#   OpenSSL, but the version of OpenSSL is outdated and only supports TLS 1.0.
+#   (This is even true of the most recent version of macOS (Sierra) with all
+#   security patches installed; see
+#   https://eclecticlight.co/2016/03/23/the-tls-mess-in-os-x-el-capitan/ .)
+#
+#   To use this module on a macOS system, you will need to install your own
+#   copy of Python and OpenSSL. Simple suggestions:
+#
+#   1) Install Homebrew from http://brew.sh; run "brew install openssl python"
+#   2) Install Miniconda from https://conda.io/miniconda.html
+#
+# - Google App Engine (GAE): Per App Engine's documentation, you must request
+#   version 2.7.11 of the "ssl" library in your app.yaml file. See:
+#   https://cloud.google.com/appengine/docs/python/sockets/ssl_support
 
 
 class QuipClient(object):
