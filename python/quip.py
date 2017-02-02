@@ -32,6 +32,7 @@ given document, which is useful for automating a task list.
 import datetime
 import json
 import logging
+import ssl
 import sys
 import time
 import urllib
@@ -40,6 +41,14 @@ import xml.etree.cElementTree
 
 reload(sys)
 sys.setdefaultencoding('utf8')
+
+
+try:
+    ssl.PROTOCOL_TLSv1_1
+except AttributeError:
+    raise Exception(
+        "Using the Quip API requires an SSL library that supports TLS versions "
+        ">= 1.1; your Python + OpenSSL installation must be upgraded.")
 
 
 class QuipClient(object):
