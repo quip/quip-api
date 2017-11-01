@@ -1,10 +1,14 @@
-Quip API
-========
+Quip Automation API
+===================
 
-This is the official repository for the [Quip API](https://quip.com/api/).
+This is the official repository for the [Quip Automation API](https://quip.com/api/).
 
-* [Quip API Reference](https://quip.com/api/reference)
-* [Get a Personal API Access Token](https://quip.com/api/personal-token)
+<strong>
+    NOTE: If you're looking for the Quip Live Apps repository, it lives at https://github.com/quip/quip-apps
+</strong>
+
+* [Quip Automation API Reference](https://quip.com/api/reference)
+* [Get a Personal Automatoin API Access Token](https://quip.com/api/personal-token)
 
 ## Client Libraries
 
