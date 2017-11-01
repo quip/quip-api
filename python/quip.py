@@ -35,13 +35,21 @@ import logging
 import ssl
 import sys
 import time
-import urllib
-import urllib2
+try:
+    from urllib import urlencode
+    from urllib2 import HTTPError, Request, urlopen
+except ImportError:
+    from urllib.error import HTTPError
+    from urllib.parse import urlencode
+    from urllib.request import Request, urlopen
 import xml.etree.cElementTree
 
-reload(sys)
-sys.setdefaultencoding('utf8')
-
+try:
+    reload(sys)
+    sys.setdefaultencoding('utf8')
+except:
+    # Can't change default encoding usually...
+    pass
 
 try:
     ssl.PROTOCOL_TLSv1_1
@@ -615,13 +623,13 @@ class QuipClient(object):
         The object is described in detail here:
         https://docs.python.org/2/library/urllib2.html#urllib2.urlopen
         """
-        request = urllib2.Request(
+        request = Request(
             url=self._url("blob/%s/%s" % (thread_id, blob_id)))
         if self.access_token:
             request.add_header("Authorization", "Bearer " + self.access_token)
         try:
-            return urllib2.urlopen(request, timeout=self.request_timeout)
-        except urllib2.HTTPError, error:
+            return urlopen(request, timeout=self.request_timeout)
+        except HTTPError as error:
             try:
                 # Extract the developer-friendly error message from the response
                 message = json.loads(error.read())["error_description"]
@@ -657,7 +665,7 @@ class QuipClient(object):
                 files={"blob": blob}, headers=headers)
             response.raise_for_status()
             return response.json()
-        except requests.RequestException, error:
+        except requests.RequestException as error:
             try:
                 # Extract the developer-friendly error message from the response
                 message = error.response.json()["error_description"]
@@ -671,17 +679,17 @@ class QuipClient(object):
         return self._fetch_json("websockets/new")
 
     def _fetch_json(self, path, post_data=None, **args):
-        request = urllib2.Request(url=self._url(path, **args))
+        request = Request(url=self._url(path, **args))
         if post_data:
             post_data = dict((k, v) for k, v in post_data.items()
                              if v or isinstance(v, int))
-            request.data = urllib.urlencode(self._clean(**post_data))
+            request.data = urlencode(self._clean(**post_data)).encode("utf-8")
         if self.access_token:
             request.add_header("Authorization", "Bearer " + self.access_token)
         try:
             return json.loads(
-                urllib2.urlopen(request, timeout=self.request_timeout).read())
-        except urllib2.HTTPError, error:
+                urlopen(request, timeout=self.request_timeout).read())
+        except HTTPError as error:
             try:
                 # Extract the developer-friendly error message from the response
                 message = json.loads(error.read())["error_description"]
@@ -692,7 +700,7 @@ class QuipClient(object):
                 # Retry later.
                 reset_time = float(error.headers.get("X-RateLimit-Reset"))
                 delay = max(2, reset_time - time.time() + 1)
-                logging.warning("Rate Limit, delaying for %d seconds" % delay)
+                logging.warning("Rate Limit, delaying for %d seconds", delay)
                 time.sleep(delay)
                 return self._fetch_json(path, post_data, **args)
             else:
@@ -701,15 +709,15 @@ class QuipClient(object):
     def _clean(self, **args):
         # We only expect ints or strings, but on Windows ints can become longs
         return dict((k, str(v) if isinstance(
-            v, (int, float, long, complex)) else v.encode("utf-8"))
+            v, (int, float, complex)) else v.encode("utf-8"))
                     for k, v in args.items() if v or isinstance(
-                            v, (int, float, long, complex)))
+                            v, (int, float, complex)))
 
     def _url(self, path, **args):
         url = self.base_url + "/1/" + path
         args = self._clean(**args)
         if args:
-            url += "?" + urllib.urlencode(args)
+            url += "?" + urlencode(args)
         return url
 
 
