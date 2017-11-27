@@ -688,7 +688,7 @@ class QuipClient(object):
             request.add_header("Authorization", "Bearer " + self.access_token)
         try:
             return json.loads(
-                urlopen(request, timeout=self.request_timeout).read())
+                urlopen(request, timeout=self.request_timeout).read().decode('utf-8'))
         except HTTPError as error:
             try:
                 # Extract the developer-friendly error message from the response
