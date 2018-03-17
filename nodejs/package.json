@@ -1,0 +1,26 @@
+{
+  "name": "quip-api",
+  "version": "0.0.1",
+  "description": "Node.js API Client for the quip automation API",
+  "main": "quip.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/quip/quip-api.git"
+  },
+  "keywords": [
+    "Quip",
+    "API"
+  ],
+  "bugs": {
+    "url": "https://github.com/quip/quip-api/issues"
+  },
+  "homepage": "https://github.com/quip/quip-api#readme",
+  "dependencies": {
+    "request": "^2.85.0",
+    "ws": "^5.0.0"
+  }
+}
