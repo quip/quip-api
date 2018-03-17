@@ -261,8 +261,13 @@ Client.prototype.getMessages = function(options) {
 
 /**
  * @param {{threadId: string,
+ *          frame: string,
  *          content: string,
- *          silent: (boolean|undefined)}} options
+ *          parts: Array<Array<string>>
+ *          attachments: Array<string>
+ *          silent: (boolean|undefined)
+ *          annotationId: string,
+ *          sectionId: string}} options
  * @return {Promise}
  */
 Client.prototype.newMessage = function(options) {
@@ -275,7 +280,6 @@ Client.prototype.newMessage = function(options) {
     silent: options.silent ? 1 : undefined,
     annotation_id: options.annotationId,
     section_id: options.sectionId,
-    suggested_responses: options.suggestedResponses,
   }
   return this.call_('messages/new', args)
 }
