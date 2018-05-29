@@ -344,8 +344,6 @@ Client.prototype.removeThreadMembers = function(options, callback) {
 };
 
 /**
- * @param {{threadId: string,
- *          memberIds: Array.<string>}} options
  * @param {function(Error, Object)} callback
  */
 Client.prototype.newWebsocket = function(callback) {
