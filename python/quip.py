@@ -35,14 +35,30 @@ import logging
 import ssl
 import sys
 import time
-try:
-    from urllib import urlencode
-    from urllib2 import HTTPError, Request, urlopen
-except ImportError:
-    from urllib.error import HTTPError
-    from urllib.parse import urlencode
-    from urllib.request import Request, urlopen
 import xml.etree.cElementTree
+
+PY3 = sys.version_info > (3,)
+
+if PY3:
+    import urllib.request, urllib.parse, urllib.error
+    Request = urllib.request.Request
+    urlencode = urllib.parse.urlencode
+    urlopen = urllib.request.urlopen
+    HTTPError = urllib.error.HTTPError
+
+    iteritems = dict.items
+
+else:
+    import urllib
+    import urllib2
+
+    Request = urllib2.Request
+    urlencode = urllib.urlencode
+    urlopen = urllib2.urlopen
+    HTTPError = urllib2.HTTPError
+
+    iteritems = dict.iteritems
+
 
 try:
     reload(sys)
@@ -77,6 +93,13 @@ except AttributeError:
 #   https://cloud.google.com/appengine/docs/python/sockets/ssl_support
 
 
+class QuipError(Exception):
+    def __init__(self, code, message, http_error):
+        Exception.__init__(self, "%d: %s" % (code, message))
+        self.code = code
+        self.http_error = http_error
+
+
 class QuipClient(object):
     """A Quip API client"""
     # Edit operations
@@ -95,7 +118,7 @@ class QuipClient(object):
     BLUE = range(5)
 
     def __init__(self, access_token=None, client_id=None, client_secret=None,
-                 base_url=None, request_timeout=None, retry_rate_limit=False):
+                 base_url=None, request_timeout=None):
         """Constructs a Quip API client.
 
         If `access_token` is given, all of the API methods in the client
@@ -110,7 +133,6 @@ class QuipClient(object):
         self.client_secret = client_secret
         self.base_url = base_url if base_url else "https://platform.quip.com"
         self.request_timeout = request_timeout if request_timeout else 10
-        self.retry_rate_limit = retry_rate_limit
 
     def get_authorization_url(self, redirect_uri, state=None):
         """Returns the URL the user should be redirected to to sign in."""
@@ -143,6 +165,12 @@ class QuipClient(object):
     def get_users(self, ids):
         """Returns a dictionary of users for the given IDs."""
         return self._fetch_json("users/", post_data={"ids": ",".join(ids)})
+
+    def update_user(self, user_id, picture_url=None):
+        return self._fetch_json("users/update", post_data={
+            "user_id": user_id,
+            "picture_url": picture_url,
+        })
 
     def get_contacts(self):
         """Returns a list of the users in the authenticated user's contacts."""
@@ -185,6 +213,10 @@ class QuipClient(object):
             "member_ids": ",".join(member_ids),
         })
 
+    def get_teams(self):
+        """Returns the teams for the user corresponding to our access token."""
+        return self._fetch_json("teams/current")
+
     def get_messages(self, thread_id, max_created_usec=None, count=None):
         """Returns the most recent messages for the given thread.
 
@@ -218,11 +250,11 @@ class QuipClient(object):
         """Returns a dictionary of threads for the given IDs."""
         return self._fetch_json("threads/", post_data={"ids": ",".join(ids)})
 
-    def get_recent_threads(self, max_updated_usec=None, count=None):
+    def get_recent_threads(self, max_updated_usec=None, count=None, **kwargs):
         """Returns the recently updated threads for a given user."""
         return self._fetch_json(
             "threads/recent", max_updated_usec=max_updated_usec,
-            count=count)
+            count=count, **kwargs)
 
     def add_thread_members(self, thread_id, member_ids):
         """Adds the given folder or user IDs to the given thread."""
@@ -238,11 +270,28 @@ class QuipClient(object):
             "member_ids": ",".join(member_ids),
         })
 
+    def pin_to_desktop(self, thread_id, **kwargs):
+        """Pins the given thread to desktop."""
+        args = {
+            "thread_id": thread_id,
+        }
+        args.update(kwargs)
+        return self._fetch_json("threads/pin-to-desktop", post_data=args)
+
     def move_thread(self, thread_id, source_folder_id, destination_folder_id):
         """Moves the given thread from the source folder to the destination one.
         """
         self.add_thread_members(thread_id, [destination_folder_id])
         self.remove_thread_members(thread_id, [source_folder_id])
+
+    def new_chat(self, message, title=None, member_ids=[]):
+        """Creates a chat with the given title and members, and send the
+        initial message."""
+        return self._fetch_json("threads/new-chat", post_data={
+            "message": message,
+            "title": title,
+            "member_ids": ",".join(member_ids),
+        })
 
     def new_document(self, content, format="html", title=None, member_ids=[]):
         """Creates a new document from the given content.
@@ -252,7 +301,7 @@ class QuipClient(object):
 
             client = quip.QuipClient(...)
             user = client.get_authenticated_user()
-            client.new_document(..., member_ids=[user["private_folder_id"]])
+            client.new_document(..., member_ids=[user["archive_folder_id"]])
 
         """
         return self._fetch_json("threads/new-document", post_data={
@@ -272,9 +321,12 @@ class QuipClient(object):
             old_thread["html"], title=title or old_thread["thread"]["title"],
             member_ids=member_ids)
 
-    def merge_comments(self, original_id, children_ids):
+    def merge_comments(self, original_id, children_ids, ignore_user_ids=[]):
         """Given an original document and a set of exact duplicates, copies
         all comments and messages on the duplicates to the original.
+
+        Impersonates the commentors if the access token used has
+        permission, but does not add them to the thread.
         """
         import re
         threads = self.get_threads(children_ids + [original_id])
@@ -287,7 +339,13 @@ class QuipClient(object):
             parent_map = dict(zip(child_section_ids, original_section_ids))
             messages = self.get_messages(thread_id)
             for message in reversed(messages):
-                kwargs = {}
+                if message["author_id"] in ignore_user_ids:
+                    continue
+                kwargs = {
+                    "user_id": message["author_id"],
+                    "frame": "bubble",
+                    "service_id": message["id"],
+                }
                 if "parts" in message:
                     kwargs["parts"] = json.dumps(message["parts"])
                 else:
@@ -324,12 +382,16 @@ class QuipClient(object):
         `operation` is relative to another section of the document, you must
         also specify the `section_id`.
         """
+
         args = {
             "thread_id": thread_id,
             "content": content,
             "location": operation,
             "format": format,
-            "section_id": section_id,
+            # Since our cell ids in 10x contain ';', which is a valid cgi
+            # parameter separator, we are replacing them with '_' in 10x cell
+            # sections. This should be no op for all other sections.
+            "section_id": section_id.replace(";", "_")
         }
         args.update(kwargs)
         return self._fetch_json("threads/edit-document", post_data=args)
@@ -350,13 +412,13 @@ class QuipClient(object):
         }
         args.update(kwargs)
         if "section_id" not in args:
-            first_list = self.get_first_list(thread_id)
-            if not first_list:
-                return None
-            args["section_id"] = self.get_last_list_item_id(first_list)
-        if not args["section_id"]:
-            # section_id = first_list.attrib["id"]
-            return None
+            first_list = self.get_first_list(
+                thread_id, kwargs.pop("document_html", None))
+            if first_list:
+                args["section_id"] = self.get_last_list_item_id(first_list)
+        if not args.get("section_id"):
+            args["operation"] = self.APPEND
+            args["content"] = "\n\n".join(["    * %s" % i for i in items])
         return self.edit_document(**args)
 
     def add_to_spreadsheet(self, thread_id, *rows, **kwargs):
@@ -373,12 +435,17 @@ class QuipClient(object):
             spreadsheet = self.get_named_spreadsheet(kwargs["name"], thread_id)
         else:
             spreadsheet = self.get_first_spreadsheet(thread_id)
-        section_id = self.get_last_row_item_id(spreadsheet)
+        if kwargs.get("add_to_top"):
+            section_id = self.get_first_row_item_id(spreadsheet)
+            operation = self.BEFORE_SECTION
+        else:
+            section_id = self.get_last_row_item_id(spreadsheet)
+            operation = self.AFTER_SECTION
         return self.edit_document(
             thread_id=thread_id,
             content=content,
             section_id=section_id,
-            operation=self.AFTER_SECTION)
+            operation=operation)
 
     def update_spreadsheet_row(self, thread_id, header, value, updates, **args):
         """Finds the row where the given header column is the given value, and
@@ -397,7 +464,7 @@ class QuipClient(object):
         row = self.find_row_from_header(spreadsheet, header, value)
         if row:
             ids = self.get_row_ids(row)
-            for head, val in updates.iteritems():
+            for head, val in iteritems(updates):
                 index = self.get_index_of_header(headers, head)
                 if not index or index >= len(ids) or not ids[index]:
                     continue
@@ -410,16 +477,25 @@ class QuipClient(object):
                     **args)
         else:
             updates[header] = value
-            indexed_items = {}
-            extra_items = []
-            for head, val in updates.iteritems():
-                index = self.get_index_of_header(
-                    headers, head, default=None)
-                if index is None or index in indexed_items:
-                    extra_items.append(val)
-                else:
-                    indexed_items[index] = val
-            cells = []
+            response = self.add_spreadsheet_row(
+                thread_id, spreadsheet, updates, headers=headers, **args)
+        return response
+
+    def add_spreadsheet_row(
+            self, thread_id, spreadsheet, updates, headers=None, **args):
+        if not headers:
+            headers = self.get_spreadsheet_header_items(spreadsheet)
+        indexed_items = {}
+        extra_items = []
+        for head, val in iteritems(updates):
+            index = self.get_index_of_header(
+                headers, head, default=None)
+            if index is None or index in indexed_items:
+                extra_items.append(val)
+            else:
+                indexed_items[index] = val
+        cells = []
+        if indexed_items:
             for i in range(max(indexed_items.keys()) + 1):
                 if i in indexed_items:
                     cells.append(indexed_items[i])
@@ -427,16 +503,16 @@ class QuipClient(object):
                     cells.append(extra_items.pop(0))
                 else:
                     cells.append("")
-            cells.extend(extra_items)
-            content = "<tr>%s</tr>" % "".join(
-                ["<td>%s</td>" % cell for cell in cells])
-            section_id = self.get_last_row_item_id(spreadsheet)
-            response = self.edit_document(
-                thread_id=thread_id,
-                content=content,
-                section_id=section_id,
-                operation=self.AFTER_SECTION,
-                **args)
+        cells.extend(extra_items)
+        content = "<tr>%s</tr>" % "".join(
+            ["<td>%s</td>" % cell for cell in cells])
+        section_id = self.get_last_row_item_id(spreadsheet)
+        response = self.edit_document(
+            thread_id=thread_id,
+            content=content,
+            section_id=section_id,
+            operation=self.AFTER_SECTION,
+            **args)
         return response
 
     def toggle_checkmark(self, thread_id, item, checked=True):
@@ -535,6 +611,11 @@ class QuipClient(object):
         items = list(spreadsheet_tree.iter("tr"))
         return items[-1].attrib["id"] if items else None
 
+    def get_first_row_item_id(self, spreadsheet_tree):
+        """Returns the last row in the given spreadsheet `ElementTree`."""
+        items = list(spreadsheet_tree.iter("tr"))
+        return items[1].attrib["id"] if items else None
+
     def get_row_items(self, row_tree):
         """Returns the text of items in the given row `ElementTree`."""
         return [(list(x.itertext()) or [None])[0] for x in row_tree]
@@ -563,7 +644,7 @@ class QuipClient(object):
                 if ord('A') < char < ord('Z'):
                     return char - ord('A') + 1
             else:
-                logging.warning("Could not find header, using first column")
+                pass
         return default
 
     def find_row_from_header(self, spreadsheet_tree, header, value):
@@ -599,10 +680,20 @@ class QuipClient(object):
             for i, cell in enumerate(row):
                 if cell.tag != "td":
                     continue
-                value["cells"][spreadsheet["headers"][i]] = {
+                data = {
                     "id": cell.attrib.get("id"),
-                    "content": list(cell.itertext())[0],
                 }
+                images = list(cell.iter("img"))
+                if images:
+                    data["content"] = images[0].attrib.get("src")
+                else:
+                    data["content"] = list(cell.itertext())[0].replace(
+                        u"\u200b", "")
+                style = cell.attrib.get("style")
+                if style and "background-color:#" in style:
+                    sharp = style.find("#")
+                    data["color"] = style[sharp+1:sharp+7]
+                value["cells"][spreadsheet["headers"][i]] = data
             if len(value["cells"]):
                 spreadsheet["rows"].append(value)
         return spreadsheet
@@ -632,19 +723,10 @@ class QuipClient(object):
         except HTTPError as error:
             try:
                 # Extract the developer-friendly error message from the response
-                message = json.loads(error.read())["error_description"]
+                message = json.loads(error.read().decode())["error_description"]
             except Exception:
                 raise error
-            if (self.retry_rate_limit and error.code == 503 and
-                message == "Over Rate Limit"):
-                # Retry later.
-                reset_time = float(error.headers.get("X-RateLimit-Reset"))
-                delay = max(2, reset_time - time.time() + 1)
-                logging.warning("Rate Limit, delaying for %d seconds" % delay)
-                time.sleep(delay)
-                return self.get_blob(thread_id, blob_id)
-            else:
-                raise QuipError(error.code, message, error)
+            raise QuipError(error.code, message, error)
 
     def put_blob(self, thread_id, blob, name=None):
         """Uploads an image or other blob to the given Quip thread. Returns an
@@ -673,45 +755,39 @@ class QuipClient(object):
                 raise error
             raise QuipError(error.response.status_code, message, error)
 
-    def new_websocket(self):
-        """Returns a websocket URL to connect to. The URL may expire if no
-        connection is initiated within 60 seconds."""
-        return self._fetch_json("websockets/new")
+    def new_websocket(self, **kwargs):
+        """Gets a websocket URL to connect to.
+        """
+        return self._fetch_json("websockets/new", **kwargs)
 
     def _fetch_json(self, path, post_data=None, **args):
         request = Request(url=self._url(path, **args))
         if post_data:
             post_data = dict((k, v) for k, v in post_data.items()
                              if v or isinstance(v, int))
-            request.data = urlencode(self._clean(**post_data)).encode("utf-8")
+            request_data = urlencode(self._clean(**post_data))
+            if PY3:
+                request.data = request_data.encode()
+            else:
+                request.data = request_data
+
         if self.access_token:
             request.add_header("Authorization", "Bearer " + self.access_token)
         try:
             return json.loads(
-                urlopen(request, timeout=self.request_timeout).read().decode('utf-8'))
+                urlopen(
+                    request, timeout=self.request_timeout).read().decode())
         except HTTPError as error:
             try:
                 # Extract the developer-friendly error message from the response
-                message = json.loads(error.read())["error_description"]
+                message = json.loads(error.read().decode())["error_description"]
             except Exception:
                 raise error
-            if (self.retry_rate_limit and error.code == 503 and
-                message == "Over Rate Limit"):
-                # Retry later.
-                reset_time = float(error.headers.get("X-RateLimit-Reset"))
-                delay = max(2, reset_time - time.time() + 1)
-                logging.warning("Rate Limit, delaying for %d seconds", delay)
-                time.sleep(delay)
-                return self._fetch_json(path, post_data, **args)
-            else:
-                raise QuipError(error.code, message, error)
+            raise QuipError(error.code, message, error)
 
     def _clean(self, **args):
-        # We only expect ints or strings, but on Windows ints can become longs
-        return dict((k, str(v) if isinstance(
-            v, (int, float, complex)) else v.encode("utf-8"))
-                    for k, v in args.items() if v or isinstance(
-                            v, (int, float, complex)))
+        return dict((k, str(v) if isinstance(v, int) else v.encode("utf-8"))
+                    for k, v in args.items() if v or isinstance(v, int))
 
     def _url(self, path, **args):
         url = self.base_url + "/1/" + path
@@ -719,10 +795,3 @@ class QuipClient(object):
         if args:
             url += "?" + urlencode(args)
         return url
-
-
-class QuipError(Exception):
-    def __init__(self, code, message, http_error):
-        Exception.__init__(self, "%d: %s" % (code, message))
-        self.code = code
-        self.http_error = http_error
