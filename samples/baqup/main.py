@@ -62,7 +62,7 @@ def main():
 
     client = quip.QuipClient(
         access_token=args.access_token, base_url=args.quip_api_base_url,
-        retry_rate_limit=True, request_timeout=120)
+        request_timeout=120)
     output_directory = os.path.join(
         _normalize_path(args.output_directory), "baqup")
     _ensure_path_exists(output_directory)
@@ -98,7 +98,7 @@ def _descend_into_folder(folder_id, processed_folder_ids, client,
     processed_folder_ids.add(folder_id)
     try:
         folder = client.get_folder(folder_id)
-    except quip.QuipError, e:
+    except quip.QuipError as e:
         if e.code == 403:
             logging.warning("%sSkipped over restricted folder %s.",
                 "  " * depth, folder_id)
@@ -106,7 +106,7 @@ def _descend_into_folder(folder_id, processed_folder_ids, client,
             logging.warning("%sSkipped over folder %s due to unknown error %d.",
                 "  " * depth, folder_id, e.code)
         return
-    except urllib2.HTTPError, e:
+    except urllib2.HTTPError as e:
         logging.warning("%sSkipped over folder %s due to HTTP error %d.",
             "  " * depth, folder_id, e.code)
         return
