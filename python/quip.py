@@ -383,15 +383,17 @@ class QuipClient(object):
         also specify the `section_id`.
         """
 
+        # Since our cell ids in 10x contain ';', which is a valid cgi
+        # parameter separator, we are replacing them with '_' in 10x cell
+        # sections. This should be no op for all other sections.
+        section_id = None if not section_id else section_id.replace(";", "_")
+
         args = {
             "thread_id": thread_id,
             "content": content,
             "location": operation,
             "format": format,
-            # Since our cell ids in 10x contain ';', which is a valid cgi
-            # parameter separator, we are replacing them with '_' in 10x cell
-            # sections. This should be no op for all other sections.
-            "section_id": section_id.replace(";", "_")
+            "section_id": section_id
         }
         args.update(kwargs)
         return self._fetch_json("threads/edit-document", post_data=args)
