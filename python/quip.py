@@ -40,7 +40,10 @@ import xml.etree.cElementTree
 PY3 = sys.version_info > (3,)
 
 if PY3:
-    import urllib.request, urllib.parse, urllib.error
+    import urllib.request
+    import urllib.parse
+    import urllib.error
+
     Request = urllib.request.Request
     urlencode = urllib.parse.urlencode
     urlopen = urllib.request.urlopen
@@ -104,18 +107,18 @@ class QuipClient(object):
     """A Quip API client"""
     # Edit operations
     APPEND, \
-    PREPEND, \
-    AFTER_SECTION, \
-    BEFORE_SECTION, \
-    REPLACE_SECTION, \
-    DELETE_SECTION = range(6)
+        PREPEND, \
+        AFTER_SECTION, \
+        BEFORE_SECTION, \
+        REPLACE_SECTION, \
+        DELETE_SECTION = range(6)
 
     # Folder colors
     MANILA, \
-    RED, \
-    ORANGE, \
-    GREEN, \
-    BLUE = range(5)
+        RED, \
+        ORANGE, \
+        GREEN, \
+        BLUE = range(5)
 
     def __init__(self, access_token=None, client_id=None, client_secret=None,
                  base_url=None, request_timeout=None):
@@ -256,6 +259,12 @@ class QuipClient(object):
             "threads/recent", max_updated_usec=max_updated_usec,
             count=count, **kwargs)
 
+    def get_matching_threads(
+            self, query, count=None, only_match_titles=False, **kwargs):
+        """Returns the recently updated threads for a given user."""
+        return self._fetch_json("threads/search", query=query, count=count,
+            only_match_titles=False, **kwargs)
+
     def add_thread_members(self, thread_id, member_ids):
         """Adds the given folder or user IDs to the given thread."""
         return self._fetch_json("threads/add-members", post_data={
@@ -360,7 +369,7 @@ class QuipClient(object):
                             '<annotation id="%s"' % message["annotation"]["id"])
                         loc = thread["html"].rfind("id=", 0, anno_loc)
                         if anno_loc >= 0 and loc >= 0:
-                            section_id = thread["html"][loc+4:loc+15]
+                            section_id = thread["html"][loc + 4:loc + 15]
                     if section_id and section_id in parent_map:
                         kwargs["section_id"] = parent_map[section_id]
                 if "files" in message:
@@ -461,7 +470,10 @@ class QuipClient(object):
 
         """
         response = None
-        spreadsheet = self.get_first_spreadsheet(thread_id)
+        if args.get("name"):
+            spreadsheet = self.get_named_spreadsheet(args["name"], thread_id)
+        else:
+            spreadsheet = self.get_first_spreadsheet(thread_id)
         headers = self.get_spreadsheet_header_items(spreadsheet)
         row = self.find_row_from_header(spreadsheet, header, value)
         if row:
@@ -694,7 +706,7 @@ class QuipClient(object):
                 style = cell.attrib.get("style")
                 if style and "background-color:#" in style:
                     sharp = style.find("#")
-                    data["color"] = style[sharp+1:sharp+7]
+                    data["color"] = style[sharp + 1:sharp + 7]
                 value["cells"][spreadsheet["headers"][i]] = data
             if len(value["cells"]):
                 spreadsheet["rows"].append(value)
