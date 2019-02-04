@@ -272,6 +272,12 @@ class QuipClient(object):
             "member_ids": ",".join(member_ids),
         })
 
+    def delete_thread(self, thread_id):
+        """Deletes the thread with the given thread id or secret"""
+        return self._fetch_json("threads/delete", post_data={
+            "thread_id": thread_id,
+        })
+
     def remove_thread_members(self, thread_id, member_ids):
         """Removes the given folder or user IDs from the given thread."""
         return self._fetch_json("threads/remove-members", post_data={
@@ -320,15 +326,25 @@ class QuipClient(object):
             "member_ids": ",".join(member_ids),
         })
 
-    def copy_document(self, id, title=None, member_ids=[]):
-        """Creates a new document from the given thread ID.
-
-        To create it in a folder, include the folder ID in member_ids.
+    def copy_document(self, thread_id, folder_ids=None, member_ids=None,
+            title=None, values=None, **kwargs):
+        """Copies the given document, optionally replaces template variables
+           in the document with values in 'values' arg. The values argument
+           must be a dictionary that contains string keys and values that
+           are either strings, numbers or dictionaries.
         """
-        old_thread = self.get_thread(id)
-        return self.new_document(
-            old_thread["html"], title=title or old_thread["thread"]["title"],
-            member_ids=member_ids)
+
+        args = {"thread_id": thread_id}
+        if folder_ids:
+            args["folder_ids"]: ",".join(folder_ids)
+        if member_ids:
+            args["member_ids"]: ",".join(member_ids)
+        if title:
+            args["title"]: title
+        if values:
+            args["values"] = json.dumps(values)
+        args.update(kwargs)
+        return self._fetch_json("threads/copy-document", post_data=args)
 
     def merge_comments(self, original_id, children_ids, ignore_user_ids=[]):
         """Given an original document and a set of exact duplicates, copies
