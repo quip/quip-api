@@ -8,7 +8,7 @@ This is the official repository for the [Quip Automation API](https://quip.com/a
 
 
 * [Quip Automation API Reference](https://quip.com/api/reference)
-* [Get a Personal Automatoin API Access Token](https://quip.com/api/personal-token)
+* [Get a Personal Automation API Access Token](https://quip.com/api/personal-token)
 
 ## Client Libraries
 
