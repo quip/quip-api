@@ -336,11 +336,11 @@ class QuipClient(object):
 
         args = {"thread_id": thread_id}
         if folder_ids:
-            args["folder_ids"]: ",".join(folder_ids)
+            args["folder_ids"] = ",".join(folder_ids)
         if member_ids:
-            args["member_ids"]: ",".join(member_ids)
+            args["member_ids"] = ",".join(member_ids)
         if title:
-            args["title"]: title
+            args["title"] = title
         if values:
             args["values"] = json.dumps(values)
         args.update(kwargs)
