@@ -285,14 +285,6 @@ class QuipClient(object):
             "member_ids": ",".join(member_ids),
         })
 
-    def pin_to_desktop(self, thread_id, **kwargs):
-        """Pins the given thread to desktop."""
-        args = {
-            "thread_id": thread_id,
-        }
-        args.update(kwargs)
-        return self._fetch_json("threads/pin-to-desktop", post_data=args)
-
     def move_thread(self, thread_id, source_folder_id, destination_folder_id):
         """Moves the given thread from the source folder to the destination one.
         """
