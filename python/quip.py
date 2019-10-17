@@ -263,7 +263,7 @@ class QuipClient(object):
             self, query, count=None, only_match_titles=False, **kwargs):
         """Returns the recently updated threads for a given user."""
         return self._fetch_json("threads/search", query=query, count=count,
-            only_match_titles=False, **kwargs)
+            only_match_titles=only_match_titles, **kwargs)
 
     def add_thread_members(self, thread_id, member_ids):
         """Adds the given folder or user IDs to the given thread."""
