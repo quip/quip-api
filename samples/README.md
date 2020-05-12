@@ -7,6 +7,7 @@ Quip API Sample Apps
 * [`webhooks`](webhooks): Inbound [Webhook](http://en.wikipedia.org/wiki/Webhook) support for posting GitHub, Crashlytics, PagerDuty and other service notifications to threads. _Python on App Engine_
 * [`wordpress`](wordpress): Publish Quip documents to [WordPress](http://wordpress.org/). _Python on the command line_
 * [`websocket`](websocket): Receive messages from Quip in real time. _Python on the command line_
+* [`events-api`](events-api): Examine, audit, and quaratine Quip content in real-time based on the Events API feed. _Python on the command line_
 
 # Community Samples
 
