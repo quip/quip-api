@@ -19,6 +19,7 @@ This is the official repository for the [Quip Automation API](https://quip.com/a
 * [Ruby](https://github.com/jacamat/quip-ruby) (from [@jacamat](https://github.com/jacamat))
 * [Go](https://github.com/mduvall/go-quip) (from [@mduvall](https://github.com/mduvall))
 * [Elixir](https://github.com/mmartinson/e_quip) (from [@mmartinson](https://github.com/mmartinson))
+* [Java](https://github.com/kenichi-ando/quip-api-java) (from [@kenichi-ando](https://github.com/kenichi-ando))
 
 ## Sample Apps
 
