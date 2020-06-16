@@ -3,3 +3,5 @@ __pycache__
 *~
 *.DS_Store
 TAGS
+
+nodejs/node_modules
