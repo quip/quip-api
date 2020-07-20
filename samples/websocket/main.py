@@ -9,29 +9,34 @@ This is a sample app for the Quip API - https://quip.com/api/.
 
 import argparse
 import json
-import logging
 import quip
-import thread
+import sys
 import time
 import websocket
 
+PY3 = sys.version_info > (3,)
+if PY3:
+    import _thread as thread
+else:
+    import thread
 
 HEARTBEAT_INTERVAL = 20
 
+
 def open_websocket(url):
     def on_message(ws, message):
-        print "message:"
-        print json.dumps(json.loads(message), indent=4)
+        print("message:")
+        print(json.dumps(json.loads(message), indent=4))
 
     def on_error(ws, error):
-        print "error:"
-        print error
+        print("error:")
+        print(error)
 
     def on_close(ws):
-        print "### connection closed ###"
+        print("### connection closed ###")
 
     def on_open(ws):
-        print "### connection established ###"
+        print("### connection established ###")
 
         def run(*args):
             while True:
@@ -40,7 +45,7 @@ def open_websocket(url):
 
         thread.start_new_thread(run, ())
 
-    websocket.enableTrace(True)
+    # websocket.enableTrace(True)
     ws = websocket.WebSocketApp(
         url, on_message=on_message, on_error=on_error, on_close=on_close)
     ws.on_open = on_open
