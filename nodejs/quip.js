@@ -43,6 +43,15 @@ var Operation = {
 };
 
 /**
+ * Message Type
+ * @enum {string}
+ */
+var MessageType = {
+    MESSAGE: 'message',
+    EDIT: 'edit'
+};
+
+/**
  * A Quip API client.
  *
  * To make API calls that access Quip data, initialize with an accessToken.
@@ -224,13 +233,15 @@ Client.prototype.removeFolderMembers = function(options, callback) {
 /**
  * @param {{threadId: string,
  *          maxUpdatedUsec: (number|undefined),
- *          count: (number|undefined)}} options
+ *          count: (number|undefined)
+ *          messageType: (MessageType|undefined)}} options
  * @param {function(Error, Object)} callback
  */
 Client.prototype.getMessages = function(options, callback) {
     this.call_('messages/' + options.threadId + '?' + querystring.stringify({
         'max_updated_usec': options.maxUpdatedUsec,
-        'count': options.count
+        'count': options.count,
+        'message_type': options.messageType
     }), callback);
 };
 
@@ -418,5 +429,6 @@ ClientError.prototype = Object.create(Error.prototype);
 
 exports.Color = Color;
 exports.Operation = Operation;
+exports.MessageType = MessageType;
 exports.Client = Client;
 exports.ClientError = ClientError;
