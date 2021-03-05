@@ -8,7 +8,3 @@ Quip API Sample Apps
 * [`wordpress`](wordpress): Publish Quip documents to [WordPress](http://wordpress.org/). _Python on the command line_
 * [`websocket`](websocket): Receive messages from Quip in real time. _Python on the command line_
 * [`events-api`](events-api): Examine, audit, and quarantine Quip content in real-time based on the Events API feed. _Python on the command line_
-
-# Community Samples
-
-* [`quiptree`](https://github.com/kwent/quiptree): Browser extension to display Quip folders and files in tree format. _Javascript on Browser Extension Engine_
