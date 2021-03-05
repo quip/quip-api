@@ -30,7 +30,3 @@ This is the official repository for the [Quip Automation API](https://quip.com/a
 * [`webhooks`](samples/webhooks): Inbound [Webhook](http://en.wikipedia.org/wiki/Webhook) support for posting GitHub, Crashlytics, PagerDuty and other service notifications to threads. _Python on App Engine_
 * [`wordpress`](samples/wordpress): Publish Quip documents to [WordPress](http://wordpress.org/). _Python on the command line_
 * [`websocket`](samples/websocket): Receive messages from Quip in real time. _Python on the command line_
-
-### Community
-
-* [`quiptree`](https://github.com/kwent/quiptree): Browser extension to display Quip folders and files in tree format. _Javascript on Browser Extension Engine_
