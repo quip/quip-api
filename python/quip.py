@@ -466,6 +466,25 @@ class QuipClient(object):
             section_id=section_id,
             operation=operation)
 
+
+    def update_spreadsheet_headers(self, thread_id, *headers, **kwargs):
+        """Updates the headers of the named (or first) spreadsheet in the
+        given document.
+            client = quip.QuipClient(...)
+            client.add_to_spreadsheet(thread_id, "Header1", "Header2", "Header3")
+        """
+        content = "".join(["<td>%s</td>" % header for header in headers])
+        if kwargs.get("name"):
+            spreadsheet = self.get_named_spreadsheet(kwargs["name"], thread_id)
+        else:
+            spreadsheet = self.get_first_spreadsheet(thread_id)
+        section_id = self.get_first_row_item_id(spreadsheet)
+        return self.edit_document(
+            thread_id=thread_id,
+            content=content,
+            section_id=section_id,
+            operation=self.PREPEND)
+            
     def update_spreadsheet_row(self, thread_id, header, value, updates, **args):
         """Finds the row where the given header column is the given value, and
         applies the given updates. Updates is a dict from header to
