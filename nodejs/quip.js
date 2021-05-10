@@ -355,6 +355,13 @@ Client.prototype.removeThreadMembers = function(options, callback) {
 };
 
 /**
+ * @param {function(Error, Object)} callback
+ */
+Client.prototype.newWebSocket = function(callback) {
+    this.call_('websockets/new', callback);
+};
+
+/**
  * @param {string} path
  * @param {function(Error, Object)} callback
  * @param {Object.<string, *>=} postArguments
