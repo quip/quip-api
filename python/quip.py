@@ -272,6 +272,22 @@ class QuipClient(object):
             "member_ids": ",".join(member_ids),
         })
 
+    def add_thread_members_by_access_level(self, thread_id, full=None,
+                                           edit=None, comment=None,
+                                           view=None):
+        """Adds the given folder or userIDs to the given thread."""
+        return self._fetch_json("threads/add-members", post_data={
+            "thread_id": thread_id,
+            "member_ids_by_access_level": json.dumps([
+                {"access_level": 0,
+                 "member_ids": [",".join(full)] if full else []},
+                {"access_level": 1,
+                 "member_ids": [",".join(edit)] if edit else []},
+                {"access_level": 2,
+                 "member_ids": [",".join(comment)] if comment else []},
+                {"access_level": 3,
+                 "member_ids": [",".join(view)] if view else []}])})
+
     def delete_thread(self, thread_id):
         """Deletes the thread with the given thread id or secret"""
         return self._fetch_json("threads/delete", post_data={
