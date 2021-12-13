@@ -280,13 +280,13 @@ class QuipClient(object):
             "thread_id": thread_id,
             "member_ids_by_access_level": json.dumps([
                 {"access_level": 0,
-                 "member_ids": [",".join(full)] if full else []},
+                 "member_ids": full or []},
                 {"access_level": 1,
-                 "member_ids": [",".join(edit)] if edit else []},
+                 "member_ids": edit or []},
                 {"access_level": 2,
-                 "member_ids": [",".join(comment)] if comment else []},
+                 "member_ids": comment or []},
                 {"access_level": 3,
-                 "member_ids": [",".join(view)] if view else []}])})
+                 "member_ids": view or []}])})
 
     def delete_thread(self, thread_id):
         """Deletes the thread with the given thread id or secret"""
