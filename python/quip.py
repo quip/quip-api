@@ -644,7 +644,7 @@ class QuipClient(object):
 
     def get_row_ids(self, row_tree):
         """Returns the ids of items in the given row `ElementTree`."""
-        return [x.attrib["id"] for x in row_tree]
+        return [x.get("id") for x in row_tree]
 
     def get_spreadsheet_header_items(self, spreadsheet_tree):
         """Returns the header row in the given spreadsheet `ElementTree`."""
