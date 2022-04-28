@@ -709,7 +709,7 @@ class QuipClient(object):
                 if images:
                     data["content"] = images[0].attrib.get("src")
                 else:
-                    data["content"] = list(cell.itertext())[0].replace(
+                    data["content"] = " ".join(list(cell.itertext())[:-1]).replace(
                         u"\u200b", "")
                 style = cell.attrib.get("style")
                 if style and "background-color:#" in style:
