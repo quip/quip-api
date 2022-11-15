@@ -479,11 +479,11 @@ class QuipClient(object):
         """
         response = None
         if args.get("name"):
-            spreadsheet = self.get_named_spreadsheet(args["name"], thread_id)
+            tree, spreadsheet = self.get_named_spreadsheet(args["name"], thread_id)
         else:
-            spreadsheet = self.get_first_spreadsheet(thread_id)
-        headers = self.get_spreadsheet_header_items(spreadsheet)
-        row = self.find_row_from_header(spreadsheet, header, value)
+            tree = self.get_first_spreadsheet(thread_id)
+        headers = self.get_spreadsheet_header_items(tree)
+        row = self.find_row_from_header(tree, header, value)
         if row:
             ids = self.get_row_ids(row)
             for head, val in iteritems(updates):
@@ -644,7 +644,7 @@ class QuipClient(object):
 
     def get_row_ids(self, row_tree):
         """Returns the ids of items in the given row `ElementTree`."""
-        return [x.attrib["id"] for x in row_tree]
+        return [x.attrib["id"] if "id" in x.attrib.keys() else None for x in row_tree]
 
     def get_spreadsheet_header_items(self, spreadsheet_tree):
         """Returns the header row in the given spreadsheet `ElementTree`."""
