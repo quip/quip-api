@@ -220,7 +220,7 @@ class QuipClient(object):
         """Returns the teams for the user corresponding to our access token."""
         return self._fetch_json("teams/current")
 
-    def get_messages(self, thread_id, max_created_usec=None, count=None):
+    def get_messages(self, thread_id, max_created_usec=None, count=None, message_type=None):
         """Returns the most recent messages for the given thread.
 
         To page through the messages, use max_created_usec, which is the
@@ -228,10 +228,13 @@ class QuipClient(object):
 
         count should be an integer indicating the number of messages you
         want returned. The maximum is 100.
+        
+        set message_type to "edit" to retrieve document edit messages. Regular
+        messages are returned by default.
         """
         return self._fetch_json(
             "messages/" + thread_id, max_created_usec=max_created_usec,
-            count=count)
+            count=count, message_type=message_type)
 
     def new_message(self, thread_id, content=None, **kwargs):
         """Sends a message on the given thread.
