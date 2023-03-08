@@ -220,7 +220,7 @@ class QuipClient(object):
         """Returns the teams for the user corresponding to our access token."""
         return self._fetch_json("teams/current")
 
-    def get_messages(self, thread_id, max_created_usec=None, count=None):
+    def get_messages(self, thread_id, max_created_usec=None, count=None,message_type="message"):
         """Returns the most recent messages for the given thread.
 
         To page through the messages, use max_created_usec, which is the
@@ -231,7 +231,7 @@ class QuipClient(object):
         """
         return self._fetch_json(
             "messages/" + thread_id, max_created_usec=max_created_usec,
-            count=count)
+            count=count,message_type=message_type)
 
     def new_message(self, thread_id, content=None, **kwargs):
         """Sends a message on the given thread.
