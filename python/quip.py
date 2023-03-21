@@ -812,7 +812,10 @@ class QuipClient(object):
                     for k, v in args.items() if v or isinstance(v, int))
 
     def _url(self, path, **args):
-        url = self.base_url + "/1/" + path
+        ver = args.pop("ver", 1)
+        if ver not in [1, 2]:
+            raise ValueError("Invalid API version: " + str(ver))
+        url = self.base_url + f"/{ver}/" + path
         args = self._clean(**args)
         if args:
             url += "?" + urlencode(args)
