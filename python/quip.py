@@ -808,7 +808,17 @@ class QuipClient(object):
             raise QuipError(error.code, message, error)
 
     def _clean(self, **args):
-        return dict((k, str(v) if isinstance(v, int) else v.encode("utf-8"))
+        def encode_value(v):
+            if isinstance(v, int):
+                return str(v)
+            elif isinstance(v, list):
+                return [encode_value(item) for item in v]
+            elif isinstance(v, str):
+                return v.encode("utf-8")
+            else:
+                return str(v).encode("utf-8")
+
+        return dict((k, encode_value(v))
                     for k, v in args.items() if v or isinstance(v, int))
 
     def _url(self, path, **args):
