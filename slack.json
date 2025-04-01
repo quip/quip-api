@@ -1,0 +1,8 @@
+{
+    "checkpoint": {
+      "checkpoint_ready_check": false,
+      "notifications": {
+        "dm": false
+      }
+    }
+  }
