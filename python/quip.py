@@ -300,7 +300,7 @@ class QuipClient(object):
             "member_ids": ",".join(member_ids),
         })
 
-    def new_document(self, content, format="html", title=None, member_ids=[]):
+    def new_document(self, content, type="document", format="html", title=None, member_ids=[]):
         """Creates a new document from the given content.
 
         To create a document in a folder, include the folder ID in the list
@@ -315,6 +315,7 @@ class QuipClient(object):
             "content": content,
             "format": format,
             "title": title,
+            "type": type,
             "member_ids": ",".join(member_ids),
         })
 
