@@ -782,6 +782,64 @@ class QuipClient(object):
         """
         return self._fetch_json("websockets/new", **kwargs)
 
+    def edit_share_link_settings(self, thread_id, mode=None,
+        show_conversation=None, show_edit_history=None, allow_messages=None,
+        allow_comments=None, enable_request_access=None,
+        allow_external_access=None, **kwargs):
+        """Changes share link settings on a thread. mode can be edit, view, none.
+        """
+        args = {
+            "thread_id": thread_id,
+            "mode": mode,
+            "show_conversation": show_conversation,
+            "show_edit_history": show_edit_history,
+            "allow_messages": allow_messages,
+            "allow_comments": allow_comments,
+            "enable_request_access": enable_request_access,
+            "allow_external_access": allow_external_access
+        }
+        args.update(kwargs)
+        return self._fetch_json("threads/edit-share-link-settings",
+            post_data=args)
+
+    def lock_thread(self, thread_id, edits_disabled, **kwargs):
+        """Lock or unlock edits to a thread.
+        """
+        args = {
+            "thread_id": thread_id,
+            "edits_disabled": edits_disabled
+        }
+        args.update(kwargs)
+        return self._fetch_json("threads/lock-edits", post_data=args)
+
+    def lock_section(self, thread_id, section_id, edits_disabled, **kwargs):
+        """Lock or unlock edits to a section.
+        """
+        args = {
+            "thread_id": thread_id,
+            "section_id": section_id,
+            "edits_disabled": edits_disabled
+        }
+        args.update(kwargs)
+        return self._fetch_json("threads/lock-section-edits", post_data=args)
+
+    def create_live_paste_section(self, source_thread_id, source_section_ids,
+        destination_thread_id, destination_section_id=None, location=None,
+        update_automatic=None, **kwargs):
+        """Add a section to a document that tracks another section and can
+           automatically update when the source section is updated.
+        """
+        args = {
+            "source_thread_id": source_thread_id,
+            "source_section_ids": source_section_ids,
+            "destination_thread_id": destination_thread_id,
+            "destination_section_id": destination_section_id,
+            "location": location,
+            "update_automatic": update_automatic
+        }
+        args.update(kwargs)
+        return self._fetch_json("threads/live-paste", post_data=args)
+
     def _fetch_json(self, path, post_data=None, **args):
         request = Request(url=self._url(path, **args))
         if post_data:
