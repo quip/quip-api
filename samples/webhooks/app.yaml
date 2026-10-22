@@ -1,8 +1,5 @@
-application: quip-webhooks
-version: 1
-runtime: python27
-api_version: 1
-threadsafe: yes
+runtime: python312
+entrypoint: gunicorn -b :$PORT main:app
 
 handlers:
 - url: /favicon\.ico
@@ -13,11 +10,5 @@ handlers:
   static_dir: static
 
 - url: .*
-  script: main.app
+  script: auto
   secure: always
-
-libraries:
-- name: webapp2
-  version: latest
-- name: jinja2
-  version: latest
