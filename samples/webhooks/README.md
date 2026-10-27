@@ -14,11 +14,16 @@ API access tokens are embedded in hook URLs. If you generate a new access token,
 
 ## Running Locally
 
-First, install the App Engine SDK from https://developers.google.com/appengine/downloads and open it to install the symlinks.  Then run:
+The sample runs on the App Engine standard `python312` runtime and uses [Flask](https://flask.palletsprojects.com/). To run it locally with Python 3.12:
 
 ```
-PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python dev_appserver.py ./
+python3 -m venv venv
+. venv/bin/activate
+pip install -r requirements.txt
+python main.py
 ```
+
+The server listens on [http://localhost:8080](http://localhost:8080).
 
 To test changes without having to deploy, you can install [ngrok](https://ngrok.com) which tunnels a localhost port such that it can be accessed from the Internet. Run:
 
@@ -30,6 +35,8 @@ And you'll be given an URL like `27841f20.ngrok.com` which you can use with GitH
 
 ## Deploying to App Engine
 
+Install the [Google Cloud CLI](https://cloud.google.com/sdk/docs/install), then run:
+
 ```
-appcfg.py --oauth2 --no_cookies update ./
+gcloud app deploy --project <your-project-id> app.yaml
 ```

@@ -22,41 +22,54 @@ import logging
 import os
 import re
 
-import jinja2
+import flask
 import quip
-import webapp2
 
-JINJA_ENVIRONMENT = jinja2.Environment(
-    loader=jinja2.FileSystemLoader(os.path.dirname(__file__)),
-    extensions=["jinja2.ext.autoescape"],
-    autoescape=True)
+app = flask.Flask(__name__)
 
 _per_client_email_to_id_cache = {}
 
-class MainHandler(webapp2.RequestHandler):
-    def get(self):
-        template = JINJA_ENVIRONMENT.get_template(
-            "templates/index.html")
-        self.response.write(template.render())
 
-class HookHandler(webapp2.RequestHandler):
+@app.route("/")
+def main_handler():
+    return flask.render_template("index.html")
+
+
+@app.route("/favicon.ico")
+def favicon():
+    # Served by the static handler in app.yaml on App Engine; this route is
+    # for local runs.
+    return flask.send_from_directory(app.root_path, "favicon.ico")
+
+
+@app.route("/hook", methods=["GET", "POST"])
+def hook_handler():
+    handler = HookHandler()
+    if flask.request.method == "GET":
+        return handler.get()
+    return handler.post()
+
+
+class HookHandler(object):
     def get(self):
-        self.redirect("/")
+        return flask.redirect("/")
 
     def post(self):
-        api_token = self.request.get("api_token")
+        request = flask.request
+        # Read the raw body before touching request.values so that it is
+        # still available for form-encoded requests.
+        body = request.get_data()
+        api_token = request.values.get("api_token")
         if not api_token:
-            self.error(400)
-            return
-        thread_id = self.request.get("thread_id")
+            return "", 400
+        thread_id = request.values.get("thread_id")
         if not thread_id:
-            self.error(400)
-            return
+            return "", 400
 
         client = quip.QuipClient(access_token=api_token)
 
-        service = self.request.get("service")
-        payload = json.loads(self.request.body)
+        service = request.values.get("service")
+        payload = json.loads(body)
         logging.info("Payload: %s", payload)
         if service == "github":
             self._handle_github(client, thread_id, payload)
@@ -65,7 +78,8 @@ class HookHandler(webapp2.RequestHandler):
         elif service == "pagerduty":
             self._handle_pagerduty(client, thread_id, payload)
         else:
-            self.error(400)
+            return "", 400
+        return ""
 
     def _handle_github(self, client, thread_id, payload):
         if payload.get("zen"):
@@ -178,8 +192,7 @@ class HookHandler(webapp2.RequestHandler):
         return cache[email] or email
 
 
-
-app = webapp2.WSGIApplication([
-    ("/hook", HookHandler),
-    ("/", MainHandler),
-], debug=True)
+if __name__ == "__main__":
+    # Local development only. On App Engine, gunicorn serves `app` (see the
+    # entrypoint in app.yaml).
+    app.run(host="127.0.0.1", port=int(os.environ.get("PORT", 8080)))
